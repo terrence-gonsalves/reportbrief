@@ -1,10 +1,9 @@
+import Link from "next/link";
 import { useEffect, useState} from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/router";
-import ProtectedRoute from "@/components/ProtectedRoute";
-import Layout from "@/components/Layout";
 
-function Home() {
+export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const router = useRouter();
 
@@ -24,8 +23,49 @@ function Home() {
     }
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setIsLoggedIn(false);
+    
+    window.location.href = "/"; 
+  };
+
   return (
-    <Layout>      
+    <div className="min-h-screen bg-linear-to-b from-gray-50 to-white">
+      <header className="border-b border-gray-200 bg-white">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">RB</span>
+            </div>
+            <span className="text-xl font-bold text-gray-900">ReportBrief</span>
+          </div>
+
+          <nav className="flex items-center space-x-6">
+            {isLoggedIn ? (
+              <>
+                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+                  Dashboard
+                </Link>
+                
+                <button onClick={handleSignOut} className="text-gray-600 hover:text-gray-900">
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="text-gray-600 hover:text-gray-900">
+                  Sign In
+                </Link>
+                <Link href="/login" className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800">
+                  Get Started
+                </Link>
+              </>
+            )}
+          </nav>
+        </div>
+      </header>
+      
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center max-w-3xl mx-auto">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -70,7 +110,7 @@ function Home() {
         </div>
       </section>
       
-      <section className="max-w-7xl mx-auto px-6">
+      <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             What you&apos;ll get from every report
@@ -304,14 +344,33 @@ function Home() {
           </button>
         </div>
       </section>
-    </Layout>
-  );
-}
-
-export default function HomePage() {
-  return (
-      <ProtectedRoute>
-          <Home />
-      </ProtectedRoute>
+      
+      <footer className="border-t border-gray-200 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-6 py-8">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <div className="w-6 h-6 bg-black rounded flex items-center justify-center">
+                <span className="text-white font-bold text-xs">RB</span>
+              </div>
+              <span className="text-sm text-gray-600">
+                © 2025 ReportBrief. All rights reserved.
+              </span>
+            </div>
+            
+            <div className="flex space-x-6 text-sm text-gray-600">
+              <Link href="/privacy" className="hover:text-gray-900">
+                Privacy
+              </Link>
+              <Link href="/terms" className="hover:text-gray-900">
+                Terms
+              </Link>
+              <Link href="/contact" className="hover:text-gray-900">
+                Contact
+              </Link>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
