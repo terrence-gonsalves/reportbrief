@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
+import { logError, logException } from "@/lib/errorLog";
 
 export default function AuthCallback() {
     const router = useRouter();
@@ -22,6 +23,11 @@ export default function AuthCallback() {
                 });
 
                 if (error) {
+                    await logException(error, {
+                        component: "AuthCallBack",
+                        action: "setSession",
+                    });
+
                     console.error("Error setting session: ", error);
                     router.push("/login?error=auth_failed");
 
@@ -44,7 +50,38 @@ export default function AuthCallback() {
                         });
                     
                     if (profileError) {
+                        await logException(profileError, {
+                            component: "AuthCallback",
+                            action: "createProfile",
+                            userId: user.id,
+                        });
+
                         console.error("Error creating profile: ", profileError);
+                    }
+
+                    // log the login event
+                    try {
+                        await fetch("/api/log-events", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${accessToken}`,
+                            },
+                            body: JSON.stringify({
+                                eventType: "user_login",
+                                paload: {
+                                    email: user.email,
+                                    login_method: "magic_link",
+                                },
+                            }),
+                        });
+                    } catch (logError) {
+                        await logException(logError, {
+                            component: "AuthCallback",
+                            action: "logLoginEvent",
+                        });
+
+                        console.error("Failed to log login event: ", logError);
                     }
                 }
 

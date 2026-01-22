@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getUserUsage } from "@/lib/usageTracker";
+import { logException } from "@/lib/errorLog";
 
 export default function UsageBadge() {
     const [usage, setUsage] = useState<{
@@ -28,6 +29,11 @@ export default function UsageBadge() {
                 hasExceeded: stats.hasExceeded,
             });
         } catch (e) {
+            await logException(e, {
+                component: "UsageBadge",
+                action: "loadUsage",
+            });
+
             console.error("Failed to load usage: ", e);
         } finally {
             setLoading(false);

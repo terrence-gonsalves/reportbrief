@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { downloadPDF } from "@/components/PDFReport";  
 import Layout from "@/components/Layout";
 import UsageBadge from "@/components/UsageBadge";
+import { logError, logException } from "@/lib/errorLog";
 
 interface Report {
     id: string;
@@ -63,6 +64,12 @@ function ReportPage() {
                 }
             }
         } catch (e: unknown) {
+            await logException(e, {
+                component: "ReportPage",
+                action: "loadReport",
+                reportId: String(id)
+            });
+
             const errorMessage = e instanceof Error ? e.message : "Failed to load report";
             setError(errorMessage);
         } finally {
@@ -78,6 +85,11 @@ function ReportPage() {
 
     const generateSummary = async () => {
         if (!id) {
+            await logError("Generate summary called without report ID", {
+                component: "ReportPage",
+                action: "generateSummary",
+            });
+
             setError("No report ID found");
 
             return;
@@ -90,12 +102,16 @@ function ReportPage() {
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
+                await logError("Generate summary attempted without session", {
+                    component: "ReportPage",
+                    action: "generateSummary",
+                    reportId: String(id),
+                });
+
                 setError("You must be logged in");
 
                 return;
             }
-
-            console.log("Checking usage limits...");
 
             // check if user can generate a report
             const usageCheck = await fetch("/api/check-usage", {
@@ -107,12 +123,17 @@ function ReportPage() {
             const usageResult = await usageCheck.json();
 
             if (!usageResult.allowed) {
+                await logError("Usage limit exceeded", {
+                    component: "ReportPage",
+                    action: "generateSummary",
+                    reportId: String(id),
+                    reason: usageResult.reason,
+                });
+
                 setError(usageResult.reason || "Cannot generate report at this time");
 
                 return;
             }
-
-            console.log("Generating summary for report: ", id);
 
             const { data: samples, error: samplesError } =  await supabase
                 .from("report_row_samples")
@@ -131,7 +152,7 @@ function ReportPage() {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({ rows: samples.sample_rows }),
-            })
+            });
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -153,16 +174,15 @@ function ReportPage() {
                     tokens_used: 0,
                 })
                 .select()
-                .single()
+                .single();
 
             if (summaryError) {
                 throw new Error("Failed to save summary");
             }
 
-            // log the report generation in DB
             await supabase.from("audit_logs").insert({
                 user_id: session.user.id,
-                event_type: "report_summarised",
+                event_type: "report_summarized",
                 payload: {
                     report_id: id,
                     report_title: report?.title || "Untitled",
@@ -170,19 +190,70 @@ function ReportPage() {
             });
 
             // update report status
-            await supabase
+            const { error: updateError } = await supabase
                 .from("reports")
                 .update({
-                    status: "summarised",
+                    status: "summarized",
                     summary_id: summaryData.id,
                 })
-                .eq("id", id)
+                .eq("id", id);
+            
+            if (updateError) {
+                await logError("Failed to update report status", {
+                    component: "ReportPage",
+                    action: "generateSummary",
+                    reportId: String(id),
+                    reason: updateError,
+                });
+
+                // keep for development purposes
+                console.error("Failed to update report status: ", updateError);
+            }
+
+            // log the report generation in DB
+            try {
+                const logResponse = await fetch("/api/log-events", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${session.access_token}`,
+                    },
+                    body: JSON.stringify({
+                        eventType: "report_summarized",
+                        payload: {
+                            report_id: id,
+                            report_title: report?.title || "Untitled",
+                        },
+                    }),
+                });
+
+                if (!logResponse.ok) {
+                    const logError = await logResponse.json();
+                    console.error("Failed to log event: ", logError);
+                }
+            } catch (e: unknown) {
+                const errorMessage = e instanceof Error ? e.message : "Failed to log response";
+
+                await logError(errorMessage, {
+                    component: "ReportPage",
+                    action: "generateSummary",
+                    reportId: String(id),
+                });
+
+                console.error("Error logging event ", errorMessage);
+            }
 
             setSummary(aiResult);
 
             // reload report to get update status
             await loadReport();
         } catch (e: unknown) {
+            await logException(e, {
+                component: "ReportPage",
+                action: "generateSummary",
+                reportId: String(id),
+            });
+
             const errorMessage = e instanceof Error ? e.message : "Failed to generate summary";
             setError(errorMessage);
         } finally {
@@ -197,6 +268,12 @@ function ReportPage() {
             setDownloadingPDF(true);
             await downloadPDF(report, summary);
         } catch (e: unknown) {
+            await logException(e, {
+                component: "ReportPage",
+                action: "handleDownloadPDF",
+                reportId: String(id),
+            });
+            
             const errorMessage = e instanceof Error ? e.message : "Failed to generate PDF";
             console.error("PDF generation error: ", errorMessage);
 
@@ -296,7 +373,7 @@ function ReportPage() {
                     </div>
                 )}
                 
-                {!summary && report?.status !== "summarised" && (
+                {!summary && report?.status !== "summarized" && (
                     <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                         <div className="max-w-md mx-auto">
                             <div className="mb-4">

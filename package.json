@@ -1,6 +1,6 @@
 {
   "name": "srs-web",
-  "version": "0.1.0",
+  "version": "0.7.1",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -11,6 +11,8 @@
   "dependencies": {
     "@react-pdf/renderer": "^4.3.1",
     "@supabase/supabase-js": "^2.88.0",
+    "@vercel/analytics": "^1.6.1",
+    "@vercel/speed-insights": "^1.3.1",
     "formidable": "^3.5.4",
     "next": "16.0.10",
     "openai": "^6.14.0",

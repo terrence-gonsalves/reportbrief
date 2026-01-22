@@ -27,6 +27,7 @@ export default async function handler(
     if (authError || !user) {
         return res.status(401).json({ error: "Unauthorised" });
     }
+    
     try {
 
         //parse data
@@ -49,13 +50,58 @@ export default async function handler(
 
         // get filename
         const filename = file.originalFilename || "report.csv";
+        
+        // check if forceNew flag is set (from form field)
+        const forceNew = fields.forceNew?.[0] === "true";
 
-        // create report record
+        // check if a report with the same title already exists for this user
+        const { data: existingReports, error: checkError } = await supabase
+            .from("reports")
+            .select("id, title, status, summary_id, uploaded_at")
+            .eq("user_id", user.id)
+            .ilike("title", filename); // case-insensitive match
+
+        if (checkError) {
+            console.error("Error checking for existing reports: ", checkError);
+        }
+
+        // if duplicate exists and forceNew is not set, return existing report info
+        if (!forceNew && existingReports && existingReports.length > 0) {
+            const existingReport = existingReports[0];
+            
+            fs.unlinkSync(file.filepath);
+            
+            return res.status(409).json({ 
+                error: "Report with this title already exists",
+                existingReport: {
+                    id: existingReport.id,
+                    title: existingReport.title,
+                    status: existingReport.status,
+                    summary_id: existingReport.summary_id,
+                    uploaded_at: existingReport.uploaded_at
+                },
+                duplicate: true
+            });
+        }
+
+        // if forceNew is true and duplicate exists, create new report with unique title
+        let finalFilename = filename;
+
+        if (forceNew && existingReports && existingReports.length > 0) {
+
+            // append timestamp to make title unique
+            const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+            const fileExt = filename.endsWith(".csv") ? ".csv" : "";
+            const baseName = filename.replace(/\.csv$/i, "");
+            finalFilename = `${baseName}_${timestamp}${fileExt}`;
+        }
+
+        // create report record with unique title
         const { data: report, error: reportError } = await supabase
             .from("reports")
             .insert({
                 user_id: user.id,
-                title: filename,
+                title: finalFilename,
                 num_rows: rows.length,
                 columns: columns,
                 status: "parsed",
@@ -69,7 +115,7 @@ export default async function handler(
 
             await logError(user.id, "Failed to create report", {
                 error: reportError?.message,
-                filename: filename,
+                filename: finalFilename,
                 rowCount: rows.length
             });
 
@@ -79,9 +125,10 @@ export default async function handler(
         // log successful upload
         await logAuditEvent("report_uploaded", user.id, {
             report_id: report.id,
-            filename: filename,
+            filename: finalFilename,
             row_count: rows.length,
-            column_count: columns.length
+            column_count: columns.length,
+            original_filename: filename !== finalFilename ? filename : undefined
         });
 
         // store sample rows

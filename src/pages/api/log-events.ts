@@ -1,12 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { canGenerateReport } from "@/lib/usageTrackerServer";
+import { logAuditEvent } from "@/lib/auditLog";
 
-export default async function handler(
+export default async function handler (
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    if (req.method !== "GET") {
+    if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }
 
@@ -21,14 +21,20 @@ export default async function handler(
         return res.status(401).json({ error: "Unauthorised" });
     }
 
-    try {
-        const result = await canGenerateReport(user.id);
+    const { eventType, payload } = req.body;
 
-        return res.status(200).json(result);
+    if (!eventType) {
+        return res.status(400).json({ error: "eventType is required" });
+    }
+
+    try {
+        await logAuditEvent(eventType, user.id, payload || {});
+        
+        return res.status(200).json({ success: true });
     } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : "Unknown error";
-        console.error("Check usage error: ", errorMessage);
+        console.error("Log event error: ", errorMessage);
 
-        return res.status(500).json({ error: "Failed to check usage" });
+        return res.status(500).json({ error: "Failed to log event" });
     }
 }
