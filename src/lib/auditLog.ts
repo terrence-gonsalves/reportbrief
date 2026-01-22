@@ -8,6 +8,7 @@ export type AuditEventType =
     | "report_summarized"
     | "report_failed"
     | "pdf_generated"
+    | "onboarding_dismissed"
     | "error"
     | "subscription_created"
     | "subscription_cancelled"
