@@ -2,6 +2,9 @@ import Link from "next/link";
 import { useEffect, useState} from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/router";
+import packageJson from "../../package.json";
+
+const APP_VERSION = packageJson.version;
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -355,6 +358,7 @@ export default function Home() {
               <span className="text-sm text-gray-600">
                 © 2025 ReportBrief. All rights reserved.
               </span>
+              <span className="text-xs text-gray-400">v{APP_VERSION}</span>
             </div>
             
             <div className="flex space-x-6 text-sm text-gray-600">
