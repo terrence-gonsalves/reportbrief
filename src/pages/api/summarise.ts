@@ -87,7 +87,7 @@ export default async function handler(
     await supabase
       .from("reports")
       .update({
-        status: "summarised",
+        status: "summarized",
         summary_id: summary.id,
       })
       .eq("id", reportId);

@@ -4,12 +4,23 @@ import { supabase } from "@/lib/supabaseClient";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/Layout";
 import UsageBadge from "@/components/UsageBadge";
+import { logError, logException } from "@/lib/errorLog";
+
+interface ExistingReport {
+    id: string;
+    title: string;
+    status: string;
+    summary_id: string | null;
+    uploaded_at: string;
+}
 
 function Upload() {
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string>("");
     const [dragActive, setDragActive] = useState(false);
+    const [existingReport, setExistingReport] = useState<ExistingReport | null>(null);
+    const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
 
@@ -35,6 +46,10 @@ function Upload() {
             if (droppedFile.name.endsWith(".csv")) {
                 setFile(droppedFile);
                 setError("");
+
+                // reset duplicate dialog when new file selected
+                setExistingReport(null);
+                setShowDuplicateDialog(false);
             } else {
                 setError("Please upload a CSV file");
             }
@@ -48,9 +63,81 @@ function Upload() {
             if (selectedFile.name.endsWith(".csv")) {
                 setFile(selectedFile);
                 setError("");
+
+                // reset duplicate dialog when new file selected
+                setExistingReport(null);
+                setShowDuplicateDialog(false);
             } else {
                 setError("Please upload a CSV file");
             }
+        }
+    };
+
+    const handleReviewExisting = () => {
+        if (existingReport) {
+            router.push(`/report/${existingReport.id}`);
+        }
+    };
+
+    const handleGenerateNew = async () => {
+        if (!file) return;
+
+        setShowDuplicateDialog(false);
+        setUploading(true);
+        setError("");
+
+        try {
+            const { data: { session }, error: authError } = await supabase.auth.getSession();
+
+            if (authError || !session) {
+                await logError("Upload attempted without valid session", {
+                    component: "UploadPage",
+                    action: "handleSubmit",
+                    authError: authError?.message,
+                });
+
+                setError("You must be logged in to upload reports");
+                setUploading(false);
+
+                router.push("/login");
+
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            // add a flag to force new upload
+            formData.append("forceNew", "true");
+
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${session.access_token}`
+                },
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.error || "Upload failed");
+            }
+
+            router.push(`/report/${data.reportId}`);
+        } catch (e: unknown) {
+            await logException(e, {
+                component: "UploadPage",
+                action: "handleGenerateNew",
+                fileName: file?.name,
+                fileSize: file?.size,
+            });
+
+            const errorMessage = e instanceof Error ? e.message : "Upload failed";
+            console.error("Upload error: ", errorMessage);
+
+            setError(errorMessage);
+            setUploading(false);
         }
     };
 
@@ -70,6 +157,12 @@ function Upload() {
             const { data: { session }, error: authError } = await supabase.auth.getSession();
 
             if (authError || !session) {
+                await logError("Upload attempted without valid session", {
+                    component: "UploadPage",
+                    action: "handleSubmit",
+                    authError: authError?.message,
+                });
+                
                 setError("You must be logged in to upload reports");
                 setUploading(false);
 
@@ -95,11 +188,28 @@ function Upload() {
             const data = await res.json();
 
             if (!res.ok) {
+
+                // handle duplicate report
+                if (res.status === 409 && data.duplicate && data.existingReport) {
+                    setExistingReport(data.existingReport);
+                    setShowDuplicateDialog(true);
+                    setUploading(false);
+
+                    return;
+                }
+                
                 throw new Error(data.error || "Upload failed");
             }
 
             router.push(`/report/${data.reportId}`);
         } catch (e: unknown) {
+            await logException(e, {
+                component: "UploadPage",
+                action: "handleSubmit",
+                fileName: file?.name,
+                fileSize: file?.size,
+            });
+            
             const errorMessage = e instanceof Error ? e.message : "Upload failed";
             console.error("Upload error: ", errorMessage);
 
@@ -237,6 +347,75 @@ function Upload() {
                         </ul>
                     </div>
                 </div>
+                
+            {showDuplicateDialog && existingReport && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
+                        <div className="flex items-start mb-4">
+                            <div className="shrink-0">
+                                <svg
+                                    className="h-6 w-6 text-yellow-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                                    />
+                                </svg>
+                            </div>
+                            <div className="ml-3 flex-1">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                    Report Already Exists
+                                </h3>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    A report with the title <strong>&ldquo;{existingReport.title}&rdquo;</strong> already exists.
+                                </p>
+                                <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                                    <div className="text-sm text-gray-700">
+                                        <p className="mb-1">
+                                            <span className="font-medium">Status:</span>{" "}
+                                            <span className="capitalize">{existingReport.status}</span>
+                                        </p>
+                                        <p>
+                                            <span className="font-medium">Uploaded:</span>{" "}
+                                            {new Date(existingReport.uploaded_at).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                            <button
+                                onClick={handleReviewExisting}
+                                className="flex-1 whitespace-nowrap bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 font-medium transition-colors"
+                            >
+                                Review existing
+                            </button>
+                            <button
+                                onClick={handleGenerateNew}
+                                className="flex-1 whitespace-nowrap bg-gray-200 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-300 font-medium transition-colors"
+                            >
+                                Generate new
+                            </button>
+                        </div>
+                        
+                        <button
+                            onClick={() => {
+                                setShowDuplicateDialog(false);
+                                setExistingReport(null);
+                            }}
+                            className="mt-3 w-full text-sm text-gray-600 hover:text-gray-800"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
             </main>
         </Layout>
     );

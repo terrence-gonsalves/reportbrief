@@ -3,13 +3,17 @@ import { supabaseAdmin } from "./supabaseServer";
 export type AuditEventType = 
     | "user_signup"
     | "user_login"
+    | "user_logout"
     | "report_uploaded"
-    | "report_summarised"
+    | "report_summarized"
     | "report_failed"
     | "pdf_generated"
     | "error"
     | "subscription_created"
-    | "subscription_cancelled";
+    | "subscription_cancelled"
+    | "dashboard_viewed"
+    | "dashboard_search"
+    | "dashboard_sorted";
 
 interface AuditLogPayload {
     [key: string]: unknown;

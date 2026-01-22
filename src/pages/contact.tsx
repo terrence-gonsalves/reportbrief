@@ -198,12 +198,6 @@ export default function Contact() {
               </div>
             </div>
           </div>
-
-          <div className="mt-12 text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-700">
-              ← Back to home
-            </Link>
-          </div>
         </div>
       </Layout>
     );

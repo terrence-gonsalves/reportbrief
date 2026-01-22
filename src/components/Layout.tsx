@@ -1,7 +1,12 @@
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
+import { logException } from "@/lib/errorLog";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
+import packageJson from "../../package.json";
+
+const APP_VERSION = packageJson.version;
 
 interface LayoutProps {
     children: ReactNode;
@@ -10,9 +15,13 @@ interface LayoutProps {
     simpleHeader?: boolean;
 }
 
-export default function Layout({ children, showHeader = true, showFooter = true, simpleHeader = false }: LayoutProps) {
+export default function Layout({ 
+    children, 
+    showHeader = true, 
+    showFooter = true, 
+    simpleHeader = false 
+}: LayoutProps) {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const router = useRouter();
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -29,8 +38,37 @@ export default function Layout({ children, showHeader = true, showFooter = true,
     }, []);
 
     const handleSignOut = async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+
+            // log the logout event
+            if (user) {
+                await fetch("/api/log-events", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        eventType: "user_logout",
+                        payload: {
+                            email: user.email,
+                        },
+                    }),
+                }).catch(e => console.error("Failed to log report: ", e));
+            }
+        } catch (e) {
+            await logException(e, {
+                component: "Layout",
+                action: "handleSignOut",
+            });
+
+            console.error("Error during logout: ", e);
+        }
+
         await supabase.auth.signOut();
-        router.push("/");
+        setIsLoggedIn(false);
+        
+        window.location.href = "/";
     };
 
     return (
@@ -54,16 +92,16 @@ export default function Layout({ children, showHeader = true, showFooter = true,
                         {isLoggedIn ? (
                         <>
                             <Link
-                                href="/upload"
+                                href="/dashboard"
                                 className="text-gray-600 hover:text-gray-900"
                             >
                                 Dashboard
-                                    </Link>
-                                    <Link
-                                    href="/upload"
-                                    className="text-gray-600 hover:text-gray-900"
-                                >
-                                    Upload
+                            </Link>
+                            <Link
+                                href="/upload"
+                                className="text-gray-600 hover:text-gray-900"
+                            >
+                                Upload
                             </Link>
 
                             <button
@@ -92,7 +130,11 @@ export default function Layout({ children, showHeader = true, showFooter = true,
             </header>
         )}
         
-            <main className="flex-1">{children}</main>
+            <main className="flex-1">
+                {children}
+                <SpeedInsights />
+                <Analytics />
+            </main>
 
         {showFooter && (
             <footer className="border-t border-gray-200 bg-gray-50">
@@ -105,6 +147,7 @@ export default function Layout({ children, showHeader = true, showFooter = true,
                             <span className="text-sm text-gray-600">
                                 © 2025 ReportBrief. All rights reserved.
                             </span>
+                            <span className="text-xs text-gray-400">v{APP_VERSION}</span>
                         </div>
                         <div className="flex space-x-6 text-sm text-gray-600">
                             <Link href="/privacy" className="hover:text-gray-900">
