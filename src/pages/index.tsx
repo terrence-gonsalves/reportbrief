@@ -61,6 +61,12 @@ export default function Home() {
                     className="text-gray-600 hover:text-gray-900"
                 >
                     Upload
+                </Link>                
+                <Link
+                    href="/pricing"
+                    className="text-gray-600 hover:text-gray-900"
+                >
+                  Pricing
                 </Link>
                 
                 <button
