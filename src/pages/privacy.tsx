@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function Privacy() {
     return(
@@ -254,14 +256,16 @@ export default function Privacy() {
                             Email: <a href="mailto:privacy@reportbrief.com" className="text-blue-600 hover:text-blue-700">privacy@reportbrief.com</a>
                         </p>
                     </section>
-                    </div>
+                </div>
 
-                    <div className="mt-8 text-center">
-                        <Link href="/" className="text-blue-600 hover:text-blue-700">
-                            ← Back to home
-                        </Link>
-                    </div>
+                <div className="mt-8 text-center">
+                    <Link href="/" className="text-blue-600 hover:text-blue-700">
+                        ← Back to home
+                    </Link>
                 </div>
             </div>
+            <SpeedInsights />
+            <Analytics />
+        </div>
     );
 }

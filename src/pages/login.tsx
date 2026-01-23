@@ -1,6 +1,5 @@
 import { useState, FormEvent } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { useRouter } from "next/router";
 import Link from "next/link";
 import Layout from "@/components/Layout";
 
@@ -9,7 +8,6 @@ export default function Login() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
-    const router = useRouter();
 
     const handleMagicLink = async (e: FormEvent) => {
         e.preventDefault();
