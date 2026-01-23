@@ -2,6 +2,8 @@ import Link from "next/link";
 import { useEffect, useState} from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/router";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
 import packageJson from "../../package.json";
 
 const APP_VERSION = packageJson.version;
@@ -367,6 +369,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      <SpeedInsights />
+      <Analytics />
     </div>
   );
 }

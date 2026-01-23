@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function Tersm() {
     return (
@@ -193,6 +195,8 @@ export default function Tersm() {
                     </Link>
                 </div>
             </div>
+            <SpeedInsights />
+            <Analytics />
         </div>
     );
 }

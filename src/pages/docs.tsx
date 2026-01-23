@@ -1,5 +1,6 @@
 import Link from "next/link";
-import Layout from "@/components/Layout";
+import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function Docs() {
     return (
@@ -301,6 +302,8 @@ export default function Docs() {
                     </div>
                 </div>
             </div>
+            <SpeedInsights />
+            <Analytics />
         </div>
     )
 }
