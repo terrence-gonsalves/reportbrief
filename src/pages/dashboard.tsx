@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Layout from "@/components/Layout";
 import UsageBadge from "@/components/UsageBadge";
+import OnboardingBanner from "@/components/OnboardingBanner";
 import { logException } from "@/lib/errorLog";
 
 interface Report {
@@ -142,7 +143,7 @@ function Dashboard() {
         setSortBy(newSort);
 
         // log sort change
-        logEvent("dashboard_sorted", { sortBy: newSort });
+        logEvent("dashboard_sorted", { sort_by: newSort });
     };
 
     const getStatusColour = (status: string) => {
@@ -186,6 +187,7 @@ function Dashboard() {
 
     return (
         <Layout>
+            <OnboardingBanner />
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-6 py-8">
                     <div className="flex justify-between items-start mb-8">
