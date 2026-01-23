@@ -51,7 +51,7 @@ export default function Home() {
             {isLoggedIn ? (
               <>
                 <Link
-                  href="/upload"
+                  href="/dashboard"
                   className="text-gray-600 hover:text-gray-900"
                 >
                   Dashboard
