@@ -41,26 +41,38 @@ export default function Home() {
             <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">RB</span>
             </div>
+
             <span className="text-xl font-bold text-gray-900">ReportBrief</span>
           </div>
 
           <nav className="flex items-center space-x-6">
             {isLoggedIn ? (
               <>
-                <Link href="/dashboard" className="text-gray-600 hover:text-gray-900">
+                <Link
+                  href="/upload"
+                  className="text-gray-600 hover:text-gray-900"
+                >
                   Dashboard
                 </Link>
-                
-                <button onClick={handleSignOut} className="text-gray-600 hover:text-gray-900">
+                <button
+                  onClick={handleSignOut}
+                  className="text-gray-600 hover:text-gray-900"
+                >
                   Sign Out
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login" className="text-gray-600 hover:text-gray-900">
+                <Link
+                  href="/login"
+                  className="text-gray-600 hover:text-gray-900"
+                >
                   Sign In
                 </Link>
-                <Link href="/login" className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800">
+                <Link
+                  href="/login"
+                  className="bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800"
+                >
                   Get Started
                 </Link>
               </>
@@ -87,6 +99,7 @@ export default function Home() {
           >
             Get Started Free
           </button>
+
           <p className="text-sm text-gray-500 mt-4">
             No credit card required • 5 free reports per month
           </p>
@@ -112,7 +125,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-      
+
       <section className="max-w-7xl mx-auto px-6 py-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -123,19 +136,13 @@ export default function Home() {
             Upload any Salesforce CSV and ReportBrief automatically generates four key deliverables
           </p>
         </div>
-
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <div className="bg-white p-6 rounded-xl border border-gray-200">
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Executive Summary
             </h3>
@@ -148,14 +155,9 @@ export default function Home() {
           <div className="bg-white p-6 rounded-xl border border-gray-200">
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Key Metrics
             </h3>
@@ -171,7 +173,6 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Notable Trends
             </h3>
@@ -184,14 +185,9 @@ export default function Home() {
           <div className="bg-white p-6 rounded-xl border border-gray-200">
             <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
               <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </div>
-
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Recommendations
             </h3>
@@ -219,7 +215,6 @@ export default function Home() {
                 />
               </svg>
             </div>
-
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Lightning Fast
             </h3>
@@ -245,11 +240,9 @@ export default function Home() {
                 />
               </svg>
             </div>
-
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Smart Insights
             </h3>
-
             <p className="text-gray-600">
               AI detects trends, anomalies, and opportunities you might miss in raw data.
             </p>
@@ -271,11 +264,9 @@ export default function Home() {
                 />
               </svg>
             </div>
-
             <h3 className="text-xl font-semibold text-gray-900 mb-2">
               Executive PDFs
             </h3>
-
             <p className="text-gray-600">
               Download beautiful, shareable PDF reports perfect for stakeholder meetings.
             </p>
@@ -288,7 +279,6 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
             How it works
           </h2>
-
           <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center">
               <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
@@ -301,7 +291,6 @@ export default function Home() {
                 Export any report from Salesforce as CSV and drag it into ReportBrief
               </p>
             </div>
-
             <div className="text-center">
               <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 2
@@ -313,7 +302,6 @@ export default function Home() {
                 Our AI reads every row, identifies patterns, and extracts key insights
               </p>
             </div>
-
             <div className="text-center">
               <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
                 3
@@ -334,11 +322,9 @@ export default function Home() {
           <h2 className="text-3xl font-bold mb-4">
             Ready to stop wasting time on manual reporting?
           </h2>
-
           <p className="text-xl text-blue-100 mb-8">
             Join Salesforce teams who are already saving hours every week
           </p>
-
           <button
             onClick={handleGetStarted}
             className="bg-white text-blue-600 px-8 py-4 rounded-lg text-lg font-medium hover:bg-gray-100 transition-colors"
@@ -360,7 +346,6 @@ export default function Home() {
               </span>
               <span className="text-xs text-gray-400">v{APP_VERSION}</span>
             </div>
-            
             <div className="flex space-x-6 text-sm text-gray-600">
               <Link href="/privacy" className="hover:text-gray-900">
                 Privacy
