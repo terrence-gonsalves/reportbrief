@@ -3,7 +3,19 @@ import Layout from "@/components/Layout";
 
 export default function Docs() {
     return (
-        <Layout>
+        <div className="min-h-screen bg-gray-50"> 
+            <header className="border-b border-gray-200 bg-white">
+                <div className="max-w-7xl mx-auto px-6 py-4">
+                    <Link href="/" className="flex items-center space-x-2">
+                        <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-sm">RB</span>
+                        </div>
+
+                        <span className="text-xl font-bold text-gray-900">ReportBrief</span>
+                    </Link>
+                </div>
+            </header>
+            
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-4xl mx-auto px-6 py-12">
                     <div className="mb-12">
@@ -289,6 +301,6 @@ export default function Docs() {
                     </div>
                 </div>
             </div>
-        </Layout>
+        </div>
     )
 }

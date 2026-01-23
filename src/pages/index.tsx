@@ -20,7 +20,7 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (isLoggedIn) {
-      router.push("/dashboard");
+      router.push("/upload");
     } else {
       router.push("login");
     }
@@ -54,6 +54,13 @@ export default function Home() {
                 >
                   Dashboard
                 </Link>
+                <Link
+                    href="/upload"
+                    className="text-gray-600 hover:text-gray-900"
+                >
+                    Upload
+                </Link>
+                
                 <button
                   onClick={handleSignOut}
                   className="text-gray-600 hover:text-gray-900"
