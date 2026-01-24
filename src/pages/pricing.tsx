@@ -324,12 +324,6 @@ export default function Pricing() {
                             {isLoggedIn ? "Go to Dashboard" : "Get Started Free"}
                         </button>
                     </div>
-                    
-                    <div className="mt-8 text-center">
-                        <Link href="/" className="text-blue-600 hover:text-blue-700">
-                            ← Back to home
-                        </Link>
-                    </div>
                 </div>
             </div>
         </Layout>
