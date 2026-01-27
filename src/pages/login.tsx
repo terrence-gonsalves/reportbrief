@@ -5,6 +5,7 @@ import Layout from "@/components/Layout";
 
 export default function Login() {
     const [email, setEmail] = useState("");
+    const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -19,7 +20,10 @@ export default function Login() {
             const { error } = await supabase.auth.signInWithOtp({
                 email: email,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/upload`,
+                    data: {
+                        name: name,
+                    },
+                    emailRedirectTo: `${window.location.origin}/auth/callback`,
                 },
             });
 
@@ -80,6 +84,29 @@ export default function Login() {
                         </div>
                     ) : (
                         <form onSubmit={handleMagicLink} className="space-y-6">
+                            <div>
+                                <label
+                                    htmlFor="name"
+                                    className="block text-sm font-medium text-gray-700"
+                                >
+                                    Name
+                                </label>
+
+                                <div className="mt-1">
+                                    <input
+                                        id="name"
+                                        name="name"
+                                        type="text"
+                                        autoComplete="name"
+                                        required
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Your name"
+                                    />
+                                </div>
+                            </div>
+                            
                             <div>
                                 <label
                                     htmlFor="email"

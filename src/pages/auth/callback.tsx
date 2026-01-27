@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
-import { logError, logException } from "@/lib/errorLog";
+import { logException } from "@/lib/errorLog";
 
 export default function AuthCallback() {
     const router = useRouter();
@@ -38,11 +38,26 @@ export default function AuthCallback() {
                 const { data: { user } } = await supabase.auth.getUser();
 
                 if (user) {
+                    const userName = user.user_metadata?.name || null;
+
+                    // determine if this is the first login
+                    const { data: existingUser } = await supabase
+                        .from("users")
+                        .select("login_count, first_login_at")
+                        .eq("id", user.id)
+                        .single();
+
+                    const isFirstLogin = !existingUser;
+                    const newLoginCount = (existingUser?.login_count || 0) + 1;
+
                     const { error: profileError } = await supabase  
                         .from("users")
                         .upsert({
                             id: user.id,
                             email: user.email,
+                            name: userName,
+                            login_count: newLoginCount,
+                            first_login_at: isFirstLogin ? new Date().toISOString() : existingUser?.first_login_at,
                             update_at: new Date().toISOString(),
                         },
                         {
@@ -57,6 +72,58 @@ export default function AuthCallback() {
                         });
 
                         console.error("Error creating profile: ", profileError);
+                    }
+
+                    // queue welcome email for first login attempt
+                    if (newLoginCount === 1) {
+                        try {
+                            await fetch("/api/emails/queue", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${accessToken}`,
+                                },
+                                body: JSON.stringify({
+                                    userId: user.id,
+                                    emailType: "welcome",
+                                    data: {
+                                        name: userName,
+                                        email: user.email,
+                                    },
+                                }),
+                            });
+
+                            // log event for queuing email
+                            await fetch("/api/log-events", {
+                                method: "POST",
+                                headers: {
+                                    "Content-Type": "application/json",
+                                    Authorization: `Bearer ${accessToken}`,
+                                },
+                                body: JSON.stringify({
+                                    eventType: "welcome_email_queue",
+                                    payload: {
+                                        level: "info",
+                                        message: "Welcome email queued",
+                                        component: "AuthCallback",
+                                        action: "queueWelcomeEmail",
+                                        userId: user.id,
+                                        metadata: {
+                                            email: user.email,
+                                            emilType: "welcome",
+                                        },
+                                    },
+                                }),
+                            });
+                        } catch (e) {
+                            await logException(e, {
+                                component: "AuthCallback",
+                                action: "queueWelcomeEmail",
+                                userId: user.id,
+                            });
+
+                            console.error("Failed to queue welcome email: ", e);
+                        }
                     }
 
                     // log the login event
