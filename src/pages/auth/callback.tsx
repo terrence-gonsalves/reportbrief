@@ -49,9 +49,6 @@ export default function AuthCallback() {
                 if (user) {
                     const userName = user.user_metadata?.name || null;
 
-                    console.log("User metadata:", user.user_metadata);
-                    console.log("User name:", userName);
-
                     // determine if this is the first login
                     const { data: existingUser, error: fetchError } = await supabase
                         .from("users")
@@ -62,14 +59,7 @@ export default function AuthCallback() {
                     if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
                         console.error("Error fetching existing user: ", fetchError);
                     }
-
-                    console.log("Existing user data:", existingUser);
-
-                    const isFirstLogin = !existingUser;
                     const newLoginCount = (existingUser?.login_count || 0) + 1;
-
-                    console.log("Is first login:", isFirstLogin);
-                    console.log("New login count:", newLoginCount);
 
                     const upsertData: UserUpsertData = {
                         id: user.id,
@@ -77,23 +67,16 @@ export default function AuthCallback() {
                         name: userName,
                         login_count: newLoginCount,
                         updated_at: new Date().toISOString(),
-                    };
-
-                    if (isFirstLogin) {
-                        upsertData.first_login_at = new Date().toISOString();
+                        first_login_at: new Date().toISOString(),
                     }
 
-                    console.log("Upserting data:", upsertData);
-
-                    const { data: upsertedUser, error: profileError } = await supabase  
+                    const { error: profileError } = await supabase  
                         .from("users")
                         .upsert(upsertData, {
                             onConflict: 'id',
                             ignoreDuplicates: false,
                         })
                         .select();
-    
-                    console.log("Upserted user:", upsertedUser);
                     
                     if (profileError) {
                         await logException(profileError, {
@@ -106,7 +89,7 @@ export default function AuthCallback() {
                     }
 
                     // queue welcome email for first login attempt
-                    if (newLoginCount === 1) {
+                    if (newLoginCount >= 1) {
                         try {
                             await fetch("/api/emails/queue", {
                                 method: "POST",
