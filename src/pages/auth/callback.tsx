@@ -167,7 +167,7 @@ export default function AuthCallback() {
                             },
                             body: JSON.stringify({
                                 eventType: "user_login",
-                                paload: {
+                                payload: {
                                     email: user.email,
                                     login_method: "magic_link",
                                 },
