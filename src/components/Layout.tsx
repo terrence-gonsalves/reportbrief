@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
+import { Metadata } from "next";
 import { supabase } from "@/lib/supabaseClient";
 import { logException } from "@/lib/errorLog";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -13,6 +14,11 @@ interface LayoutProps {
     showHeader?: boolean;
     showFooter?: boolean;
     simpleHeader?: boolean;
+}
+
+export const metadata: Metadata = {
+    title: "ReportBrief",
+    description: "A lightweight AI-powered micro-SaaS that transforms Salesforce report data into clear, executive-ready summaries."
 }
 
 export default function Layout({ 

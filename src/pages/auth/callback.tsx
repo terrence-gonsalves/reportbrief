@@ -40,29 +40,58 @@ export default function AuthCallback() {
                 if (user) {
                     const userName = user.user_metadata?.name || null;
 
+                    console.log("User metadata:", user.user_metadata);
+                    console.log("User name:", userName);
+
                     // determine if this is the first login
-                    const { data: existingUser } = await supabase
+                    const { data: existingUser, error: fetchError } = await supabase
                         .from("users")
                         .select("login_count, first_login_at")
                         .eq("id", user.id)
                         .single();
+                    
+                    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
+                        console.error("Error fetching existing user: ", fetchError);
+                    }
+
+                    console.log("Existing user data:", existingUser);
 
                     const isFirstLogin = !existingUser;
                     const newLoginCount = (existingUser?.login_count || 0) + 1;
 
-                    const { error: profileError } = await supabase  
+                    console.log("Is first login:", isFirstLogin);
+                    console.log("New login count:", newLoginCount);
+
+                    const upsertData: {
+                        id: string;
+                        email: string | undefined;
+                        name: string | null;
+                        login_count: number;
+                        updated_at: string;
+                        first_login_at?: string;
+                    } = {
+                        id: user.id,
+                        email: user.email,
+                        name: userName,
+                        login_count: newLoginCount,
+                        updated_at: new Date().toISOString(),
+                    };
+
+                    if (isFirstLogin) {
+                        upsertData.first_login_at = new Date().toISOString();
+                    }
+
+                    console.log("Upserting data:", upsertData);
+
+                    const { data: upsertedUser, error: profileError } = await supabase  
                         .from("users")
-                        .upsert({
-                            id: user.id,
-                            email: user.email,
-                            name: userName,
-                            login_count: newLoginCount,
-                            first_login_at: isFirstLogin ? new Date().toISOString() : existingUser?.first_login_at,
-                            update_at: new Date().toISOString(),
-                        },
-                        {
-                            onConflict: 'id'
-                        });
+                        .upsert(upsertData, {
+                            onConflict: 'id',
+                            ignoreDuplicates: false,
+                        })
+                        .select();
+    
+                    console.log("Upserted user:", upsertedUser);
                     
                     if (profileError) {
                         await logException(profileError, {
