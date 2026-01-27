@@ -3,6 +3,15 @@ import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabaseClient";
 import { logException } from "@/lib/errorLog";
 
+interface UserUpsertData {
+    id: string;
+    email: string | undefined;
+    name: string | null;
+    login_count: number;
+    updated_at: string;
+    first_login_at?: string;
+}
+
 export default function AuthCallback() {
     const router = useRouter();
 
@@ -62,14 +71,7 @@ export default function AuthCallback() {
                     console.log("Is first login:", isFirstLogin);
                     console.log("New login count:", newLoginCount);
 
-                    const upsertData: {
-                        id: string;
-                        email: string | undefined;
-                        name: string | null;
-                        login_count: number;
-                        updated_at: string;
-                        first_login_at?: string;
-                    } = {
+                    const upsertData: UserUpsertData = {
                         id: user.id,
                         email: user.email,
                         name: userName,
