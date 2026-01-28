@@ -30,6 +30,8 @@ export default async function handler(
             .eq("id", userId)
             .single();
 
+        console.log("User error value: ", userError);
+
         if (userError || !userData) {
             return res.status(404).json({ error: "User not found" });
         }
@@ -51,6 +53,7 @@ export default async function handler(
 
         // is user has opted out (right now they cannot) don't queue
         if (preferenceField && preferences && preferences[preferenceField] === false) {
+            console.log("User opted out.");
             return res.status(200).json({ 
                 message: "Email not queued - user opted out",
                 queued: false
@@ -70,19 +73,20 @@ export default async function handler(
         // generate email
         const { data: queuedEmail, error: queueError } = await supabase
             .from("email_queue")
-                .insert({
-                    user_id: userId,
-                    email_type: emailType,
-                    to_email: userData.email,
-                    subject: subject,
-                    status: "pending",
-                    metadata: data,
-                    scheduled_at: new Date().toISOString(),
-                })
+            .insert({
+                user_id: userId,
+                email_type: emailType,
+                to_email: userData.email,
+                subject: subject,
+                status: "pending",
+                metadata: data,
+                scheduled_at: new Date().toISOString(),
+            })
             .select()
             .single();
 
         if (queueError) {
+            console.log("Error queuing emails");
             throw queueError;
         }
 
