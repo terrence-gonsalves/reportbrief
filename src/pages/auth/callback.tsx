@@ -59,9 +59,6 @@ export default function AuthCallback() {
                     const isFirstLogin = !existingUser || existingUser.login_count === 0 || existingUser.login_count === null;
                     const newLoginCount = (existingUser?.login_count || 0) + 1;
 
-                    console.log("Is first login:", isFirstLogin);
-                    console.log("New login count:", newLoginCount);
-
                     const upsertData: UserUpsertData = {
                         id: user.id,
                         email: user.email,
@@ -92,13 +89,8 @@ export default function AuthCallback() {
                         console.error("Error creating profile: ", profileError);
                     }
 
-                    console.log("New login count before newLoginCount if statement: ", newLoginCount);
-
                     // queue welcome email for first login attempt
-                    if (newLoginCount === 1) { // this is not working
-                        console.log("New login count: ", newLoginCount);
-                        console.log("Queueing welcome email");
-
+                    if (newLoginCount === 1) {
                         try {
                             await fetch("/api/emails/queue", {
                                 method: "POST",
