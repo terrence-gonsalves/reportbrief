@@ -38,6 +38,8 @@ export default async function handler(
             return res.status(404).json({ error: "User not found" });
         }
 
+        console.log("There is no email selection errors from the users table.");
+
         const preferencesArray = userData.email_preferences;
         const preferences = Array.isArray(preferencesArray) && preferencesArray.length > 0 
             ? preferencesArray[0] as Record<string, boolean>
