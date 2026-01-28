@@ -14,6 +14,7 @@ export default async function handler(
         const { data: { user }, error: authError } = await supabase.auth.getUser();
 
         if (authError || !user) {
+            console.log("Authorization or no user error!");
             return res.status(401).json({ error: "Unauthorised" });
         }
 
@@ -21,6 +22,7 @@ export default async function handler(
 
         // validate request body
         if (!userId || !emailType || !data) {
+            console.log("Nothing was returned in the bod request.");
             return res.status(400).json({ error: "Missing required fields" });
         }
 
