@@ -72,7 +72,7 @@ export default function AuthCallback() {
 
                         // create default email preferences for new users
                         const { error: preferencesError } = await supabase
-                            .from("email_preferencees")
+                            .from("email_preferences")
                             .insert({
                                 user_id: user.id,
                                 welcome_email: true,
