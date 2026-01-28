@@ -9,8 +9,6 @@ export default async function handler(
         return res.status(405).json({ error: "Method not allowed" });
     }
 
-    console.log("we are in the queue api call.");
-
     try {      
         const supabase = createSupabaseServerClient(req);
         const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -18,8 +16,6 @@ export default async function handler(
         if (authError || !user) {
             return res.status(401).json({ error: "Unauthorised" });
         }
-
-        console.log("there is no auth error and user exist");
 
         const { userId, emailType, data } = req.body;
 
@@ -30,15 +26,13 @@ export default async function handler(
 
         const { data: userData, error: userError } = await supabase
             .from("users")
-            .select("email, email_preferences!inner(*)")
+            .select("email, email_preferences(*)")
             .eq("id", userId)
             .single();
 
         if (userError || !userData) {
             return res.status(404).json({ error: "User not found" });
         }
-
-        console.log("There is no email selection errors from the users table.");
 
         const preferencesArray = userData.email_preferences;
         const preferences = Array.isArray(preferencesArray) && preferencesArray.length > 0 

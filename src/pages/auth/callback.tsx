@@ -67,8 +67,31 @@ export default function AuthCallback() {
                         updated_at: new Date().toISOString(),
                     };
 
-                    if (isFirstLogin) { // this is not working because the value is false
+                    if (isFirstLogin) { 
                         upsertData.first_login_at = new Date().toISOString();
+
+                        // create default email preferences for new users
+                        const { error: preferencesError } = await supabase
+                            .from("email_preferencees")
+                            .insert({
+                                user_id: user.id,
+                                welcome_email: true,
+                                summary_ready: true,
+                                usage_warnings: true,
+                                monthly_reset: true,
+                                engagement_emails: true,
+                                product_updates: true,
+                            });
+                        
+                        if (preferencesError) {
+                            console.error("Error creating email preferences: ", preferencesError);
+
+                            await logException(preferencesError, {
+                                component: "AuthCallback",
+                                action: "createEmailPreferences",
+                                userId: user.id,
+                            });
+                        }
                     }
 
                     const { error: profileError } = await supabase  
