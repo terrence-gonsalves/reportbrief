@@ -50,20 +50,15 @@ export default function AuthCallback() {
                     const userName = user.user_metadata?.name || null;
 
                     // determine if this is the first login
-                    const { data: existingUser, error: fetchError } = await supabase
+                    const { data: existingUser } = await supabase
                         .from("users")
                         .select("login_count, first_login_at")
                         .eq("id", user.id)
                         .single();
-                    
-                    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
-                        console.error("Error fetching existing user: ", fetchError);
-                    }
 
-                    const isFirstLogin = !existingUser;
+                    const isFirstLogin = !existingUser || existingUser.login_count === 0 || existingUser.login_count === null;
                     const newLoginCount = (existingUser?.login_count || 0) + 1;
 
-                    console.log("Existing user data:", existingUser);
                     console.log("Is first login:", isFirstLogin);
                     console.log("New login count:", newLoginCount);
 
@@ -79,17 +74,13 @@ export default function AuthCallback() {
                         upsertData.first_login_at = new Date().toISOString();
                     }
 
-                    console.log("Upserting data:", upsertData);
-
-                    const { data: upsertedUser, error: profileError } = await supabase  
+                    const { error: profileError } = await supabase  
                         .from("users")
                         .upsert(upsertData, {
                             onConflict: 'id',
                             ignoreDuplicates: false,
                         })
                         .select();
-    
-                    console.log("Upserted user:", upsertedUser);
                     
                     if (profileError) {
                         await logException(profileError, {
@@ -106,6 +97,7 @@ export default function AuthCallback() {
                     // queue welcome email for first login attempt
                     if (newLoginCount === 1) { // this is not working
                         console.log("New login count: ", newLoginCount);
+                        console.log("Queueing welcome email");
 
                         try {
                             await fetch("/api/emails/queue", {
