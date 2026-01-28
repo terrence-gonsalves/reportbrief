@@ -13,7 +13,6 @@ export const supabaseAdmin = createClient(
     }
 );
 
-
 // client for authenticated requests
 export function createSupabaseServerClient(req: NextApiRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
