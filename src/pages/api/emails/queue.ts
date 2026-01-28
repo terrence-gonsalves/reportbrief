@@ -53,6 +53,7 @@ export default async function handler(
 
         // is user has opted out (right now they cannot) don't queue
         if (preferenceField && preferences && preferences[preferenceField] === false) {
+            console.log("User opted out.");
             return res.status(200).json({ 
                 message: "Email not queued - user opted out",
                 queued: false
@@ -85,6 +86,7 @@ export default async function handler(
             .single();
 
         if (queueError) {
+            console.log("Error queuing emails");
             throw queueError;
         }
 
