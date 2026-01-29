@@ -114,18 +114,7 @@ export default function AuthCallback() {
 
                     // queue welcome email for first login attempt
                     if (newLoginCount === 1) {
-                        console.log("✅ newLoginCount === 1, attempting to queue welcome email");
                         try {
-                            console.log("Making fetch request to /api/emails/queue");
-                            console.log("Request body:", JSON.stringify({
-                                userId: user.id,
-                                emailType: "welcome",
-                                data: {
-                                    name: userName,
-                                    email: user.email,
-                                },
-                            }));
-
                             const queueResponse = await fetch("/api/emails/queue", {
                                 method: "POST",
                                 headers: {
@@ -142,13 +131,14 @@ export default function AuthCallback() {
                                 }),
                             });
 
-                            console.log("Queue response status:", queueResponse.status);
-                            console.log("Queue response ok:", queueResponse.ok);
-
                             const queueResult = await queueResponse.json();
-                            console.log("Queue response body:", queueResult);
 
                             if (!queueResponse.ok) {
+                                await logException(queueResult, {
+                                component: "AuthCallback",
+                                action: "queueWelcomeEmail",
+                                userId: user.id,
+                            });
                                 console.error("Failed to queue email:", queueResult);
                             }
 
@@ -175,7 +165,6 @@ export default function AuthCallback() {
                                 }),
                             });
                         } catch (e) {
-                            console.error("❌ Exception while queueing email:", e);
                             await logException(e, {
                                 component: "AuthCallback",
                                 action: "queueWelcomeEmail",
@@ -184,8 +173,6 @@ export default function AuthCallback() {
 
                             console.error("Failed to queue welcome email: ", e);
                         }
-                    } else {
-                        console.log("❌ NOT queueing email. newLoginCount:", newLoginCount);
                     }
 
                     // log the login event
