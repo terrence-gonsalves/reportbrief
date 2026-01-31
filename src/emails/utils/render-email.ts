@@ -20,6 +20,12 @@ export interface EmailData {
     lastMonthReports?: number;
 }
 
+/**
+ * Renders an email template to HTML
+ * @param emailType - The type of email to render
+ * @param data - The data to pass to the email template
+ * @returns HTML string ready to be sent
+ */
 export async function renderEmail(
     emailType: string,
     data: EmailData
