@@ -37,6 +37,7 @@ Built for Salesforce admins, RevOps, and operators who need insights without man
 | Database | Supabase (PostgreSQL + RLS) |
 | AI | OpenAI API (stubbed for MVP) |
 | Styling | Tailwind CSS |
+| Email | Resend |
 | Hosting (planned) | Vercel |
 
 ## 🏗️ Architecture Overview

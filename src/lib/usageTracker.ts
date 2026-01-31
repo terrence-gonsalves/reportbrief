@@ -21,14 +21,13 @@ export async function getUserUsage(userId: string): Promise<UsageStats> {
         .from("audit_logs")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
-        .eq("event_type", "report_summarized")
+        .eq("event_type", "report_uploaded")
         .gte("created_at", startOfMonth.toISOString());
 
     if (error) {
         console.error("Error fetching usage: ", error);
 
         // return zero usage on error rather than thowing
-
         return {
             reportsThisMonth: 0,
             limit: FREE_TIER_LIMIT,

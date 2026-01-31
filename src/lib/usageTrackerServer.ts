@@ -24,7 +24,7 @@ export async function canGenerateReport(userId: string): Promise<{
         .from("audit_logs")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
-        .eq("event_type", "report_summarized")
+        .eq("event_type", "report_uploaded")
         .gte("created_at", startOfMonth.toISOString());
     
     if (error) {
