@@ -9,6 +9,11 @@ import { logException } from "@/lib/errorLog";
  */
 export async function processEmailQueue() {
     try {
+        console.log("=== PROCESSING EMAIL QUEUE ===");
+        console.log("Current time:", new Date().toISOString());
+        
+        console.log("Querying for pending emails...");
+
         const { data: { session } } = await supabase.auth.getSession();
 
         // get all pending emails
@@ -16,9 +21,14 @@ export async function processEmailQueue() {
             .from("email_queue")
             .select("*")
             .eq("status", "pending")
-            //.lte("scheduled_at", new Date().toISOString())
+            .lte("scheduled_at", new Date().toISOString())
             .order("created_at", { ascending: true })
             .limit(50);
+
+        console.log("Query completed");
+        console.log("Fetch error:", fetchError);
+        console.log("Pending emails found:", pendingEmails?.length || 0);
+        console.log("Pending emails data:", JSON.stringify(pendingEmails, null, 2));
 
         if (fetchError) {
             await logException(fetchError, {
@@ -31,6 +41,15 @@ export async function processEmailQueue() {
         }
 
         if (!pendingEmails || pendingEmails.length === 0) {
+            console.log("No pending emails to process");
+
+            const { data: allEmails, error: allError } = await supabase
+                .from("email_queue")
+                .select("*");
+      
+            console.log("Total emails in queue (all statuses):", allEmails?.length || 0);
+            console.log("All emails:", JSON.stringify(allEmails, null, 2));
+
             await logException(fetchError, {
                 component: "processEmailQueue",
                 action: "noPendingEmails",
@@ -43,10 +62,14 @@ export async function processEmailQueue() {
             };
         }
 
+        console.log(`Found ${pendingEmails.length} pending emails`);
+
         let sentCount = 0;
         let failedCount = 0;
 
         for (const email of pendingEmails) {
+            console.log(`Processing email ${email.id} (${email.email_type}) to ${email.to_email}`);
+
             try {
                 await sendEmail({
                     to: email.to_email,
@@ -91,6 +114,7 @@ export async function processEmailQueue() {
                         });
                     }
                     
+                    console.log(`✅ Email ${email.id} sent successfully`);
                     sentCount++;
                 }
             } catch (e) {
@@ -121,6 +145,11 @@ export async function processEmailQueue() {
                 failedCount++;
             }
         }
+
+        console.log(`=== EMAIL QUEUE PROCESSING COMPLETE ===`);
+        console.log(`Processed: ${pendingEmails.length}`);
+        console.log(`Sent: ${sentCount}`);
+        console.log(`Failed: ${failedCount}`);
 
         return {
             processed: pendingEmails.length,
