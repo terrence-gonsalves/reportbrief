@@ -6,16 +6,14 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    // const authHeader = req.headers.authorization;
+    const authHeader = req.headers.authorization;
 
     // production
-    /*
     if (process.env.NODE_ENV === "production") {
         if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
             return res.status(401).json({ error: "Unauthorized" });
         }
     }
-    */
 
     try {
         console.log("Cron job triggered: process-email-queue");
