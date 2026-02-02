@@ -34,6 +34,11 @@ export async function processEmailQueue() {
         if (!pendingEmails || pendingEmails.length === 0) {
             console.log("No pending emails to process");
 
+            await logException(fetchError, {
+                component: "processEmailQueue",
+                action: "noPendingEmails",
+            });
+
             return {
                 processed: 0,
                 sent: 0,
