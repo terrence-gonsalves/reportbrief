@@ -13,8 +13,6 @@ export default async function handler(
     }
 
     try {
-        console.log("Manual trigger: processing email queue");
-
         const results = await processEmailQueue();
 
         return res.status(200).json({
@@ -27,8 +25,6 @@ export default async function handler(
             component: "triggerEmailHandler",
             action: "triggerEmail",
         });
-
-        console.log("Error processing queue: ", e);
 
         return res.status(500).json({
             success: false,
