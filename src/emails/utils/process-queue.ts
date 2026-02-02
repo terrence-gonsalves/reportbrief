@@ -43,7 +43,7 @@ export async function processEmailQueue() {
         if (!pendingEmails || pendingEmails.length === 0) {
             console.log("No pending emails to process");
 
-            const { data: allEmails, error: allError } = await supabase
+            const { data: allEmails } = await supabase
                 .from("email_queue")
                 .select("*");
       
