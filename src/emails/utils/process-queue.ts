@@ -1,5 +1,5 @@
 import { sendEmail } from "./send-email";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseServer";
 import { logException } from "@/lib/errorLog";
 
 /**
@@ -14,14 +14,14 @@ export async function processEmailQueue() {
         
         console.log("Querying for pending emails...");
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabaseAdmin.auth.getSession();
 
         // get all pending emails
-        const { data: pendingEmails, error: fetchError } = await supabase
+        const { data: pendingEmails, error: fetchError } = await supabaseAdmin
             .from("email_queue")
-            .select()
+            .select("*")
             .eq("status", "pending")
-            //.lte("scheduled_at", new Date().toISOString())
+            .lte("scheduled_at", new Date().toISOString())
             .order("created_at", { ascending: true })
             .limit(50);
 
@@ -43,7 +43,7 @@ export async function processEmailQueue() {
         if (!pendingEmails || pendingEmails.length === 0) {
             console.log("No pending emails to process");
 
-            const { data: allEmails } = await supabase
+            const { data: allEmails } = await supabaseAdmin
                 .from("email_queue")
                 .select();
       
@@ -78,7 +78,7 @@ export async function processEmailQueue() {
                     data: email.metadata || {},
                 });
 
-                const { error: updateError } = await supabase
+                const { error: updateError } = await supabaseAdmin
                     .from("email_queue")
                     .update({
                         status: "sent",
@@ -125,7 +125,7 @@ export async function processEmailQueue() {
 
                 console.error(`❌ Failed to send email ${email.id}:`, e);
 
-                const { error: updateError } = await supabase
+                const { error: updateError } = await supabaseAdmin
                     .from("email_queue")
                     .update({
                         status: "failed",
