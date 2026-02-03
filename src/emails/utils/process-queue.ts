@@ -21,7 +21,7 @@ export async function processEmailQueue() {
             .from("email_queue")
             .select()
             .eq("status", "pending")
-            .lte("scheduled_at", new Date().toISOString())
+            //.lte("scheduled_at", new Date().toISOString())
             .order("created_at", { ascending: true })
             .limit(50);
 
