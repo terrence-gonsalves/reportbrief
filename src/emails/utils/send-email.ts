@@ -32,6 +32,9 @@ export async function sendEmail({
     console.log("Email Type:", emailType);
     console.log("Data:", JSON.stringify(data, null, 2));
 
+    // as I do not have a domain in place I can only send test emails to this address: terrence@bloopa.co
+    const testEmail = "terrence@bloopa.co";
+
     const { data: { session } } = await supabaseAdmin.auth.getSession();
 
     try {
@@ -54,7 +57,7 @@ export async function sendEmail({
         // send email
         const result = await resend.emails.send({
             from: "ReportBrief <onboarding@resend.dev>", // update to verified later noreply@reportbrief.ca
-            to: to,
+            to: testEmail,
             subject: subject,
             html: html,
         });
