@@ -31,10 +31,6 @@ export async function processEmailQueue() {
         }
 
         if (!pendingEmails || pendingEmails.length === 0) {
-            const { data: allEmails } = await supabaseAdmin
-                .from("email_queue")
-                .select();
-
             return {
                 processed: 0,
                 sent: 0,
