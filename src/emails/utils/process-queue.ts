@@ -19,7 +19,7 @@ export async function processEmailQueue() {
         // get all pending emails
         const { data: pendingEmails, error: fetchError } = await supabase
             .from("email_queue")
-            .select("*")
+            .select()
             .eq("status", "pending")
             .lte("scheduled_at", new Date().toISOString())
             .order("created_at", { ascending: true })
@@ -45,7 +45,7 @@ export async function processEmailQueue() {
 
             const { data: allEmails } = await supabase
                 .from("email_queue")
-                .select("*");
+                .select();
       
             console.log("Total emails in queue (all statuses):", allEmails?.length || 0);
             console.log("All emails:", JSON.stringify(allEmails, null, 2));
