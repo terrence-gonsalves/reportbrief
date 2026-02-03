@@ -14,7 +14,11 @@ export type AuditEventType =
     | "subscription_cancelled"
     | "dashboard_viewed"
     | "dashboard_search"
-    | "dashboard_sorted";
+    | "dashboard_sorted"
+    | "email_sent"
+    | "email_failed"
+    | "email_queued"
+    | "email_processed";
 
 interface AuditLogPayload {
     [key: string]: unknown;
