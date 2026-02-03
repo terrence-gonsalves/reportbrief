@@ -146,10 +146,24 @@ export async function processEmailQueue() {
             }
         }
 
-        console.log(`=== EMAIL QUEUE PROCESSING COMPLETE ===`);
-        console.log(`Processed: ${pendingEmails.length}`);
-        console.log(`Sent: ${sentCount}`);
-        console.log(`Failed: ${failedCount}`);
+        if (session) {
+            await fetch("/api/log-events", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`,
+                },
+                body: JSON.stringify({
+                    eventType: "email_sent",
+                    payload: {
+                        level: "info",
+                        message: "Email sent successfully",
+                        component: "processEmailQueue",
+                        action: "processEmailQueue",
+                    },
+                }),
+            }).catch(e => console.error("Failed to log email sent: ", e));
+        }
 
         return {
             processed: pendingEmails.length,
