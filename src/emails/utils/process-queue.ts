@@ -50,10 +50,10 @@ export async function processEmailQueue() {
             console.log("Total emails in queue (all statuses):", allEmails?.length || 0);
             console.log("All emails:", JSON.stringify(allEmails, null, 2));
 
-            await logException(fetchError, {
-                component: "processEmailQueue",
-                action: "noPendingEmails",
-            });
+            // await logException(fetchError, {
+            //     component: "processEmailQueue",
+            //     action: "noPendingEmails",
+            // });
 
             return {
                 processed: 0,
