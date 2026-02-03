@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import { renderEmail, EmailData } from "./render-email";
-import { supabase } from "@/lib/supabaseClient";
+import { supabaseAdmin } from "@/lib/supabaseServer";
 import { logException } from "@/lib/errorLog";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -26,13 +26,34 @@ export async function sendEmail({
     emailType,
     data,
 }: SendEmailData) {
-    try {
-        const { data: { session } } = await supabase.auth.getSession();
-        const html = await renderEmail(emailType, data); // render to html
+    console.log("\n=== SEND EMAIL FUNCTION CALLED ===");
+    console.log("To:", to);
+    console.log("Subject:", subject);
+    console.log("Email Type:", emailType);
+    console.log("Data:", JSON.stringify(data, null, 2));
 
+    const { data: { session } } = await supabaseAdmin.auth.getSession();
+
+    try {
+        console.log("Checking Resend API key...");
+        console.log("RESEND_API_KEY:", process.env.RESEND_API_KEY ? 
+        `Set (starts with: ${process.env.RESEND_API_KEY.substring(0, 10)}...)` : 
+        "NOT SET ❌"
+        );
+
+        if (!process.env.RESEND_API_KEY) {
+            throw new Error("RESEND_API_KEY environment variable is not set");
+        }
+
+        console.log("Rendering email template...");
+        const html = await renderEmail(emailType, data); // render to html
+        console.log("Email HTML rendered successfully (length:", html.length, "chars)");
+        console.log("First 200 chars of HTML:", html.substring(0, 200));
+
+        console.log("Sending email via Resend...");
         // send email
         const result = await resend.emails.send({
-            from: "ReportBrief <onboarding@resend.dev>, // update to verified later noreply@reportbrief.ca>", 
+            from: "ReportBrief <onboarding@resend.dev>", // update to verified later noreply@reportbrief.ca
             to: to,
             subject: subject,
             html: html,
@@ -58,7 +79,8 @@ export async function sendEmail({
             });
         }
 
-        console.log("Email sent successfully: ", result);
+        console.log("✅ Resend API response:", JSON.stringify(result, null, 2));
+        console.log("Email sent successfully!");
 
         return result;
     } catch (e) {
@@ -67,6 +89,15 @@ export async function sendEmail({
             action: "sendingEmail",
         });
 
-        console.error("Error sending email: ", e);
+        console.error("\n❌ ERROR IN SEND EMAIL:");
+        console.error("Error type:", e?.constructor?.name);
+        console.error("Error message:", e instanceof Error ? e.message : e);
+        console.error("Error stack:", e instanceof Error ? e.stack : "No stack trace");
+
+        if (e && typeof e === 'object' && 'response' in e) {
+            console.error("Resend API error details:", JSON.stringify(e, null, 2));
+        }
+            
+        throw e;
     }
 }
