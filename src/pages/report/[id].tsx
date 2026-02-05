@@ -99,6 +99,8 @@ function ReportPage() {
             setGenerating(true);
             setError("");
 
+            const generationStartTime = Date.now();
+
             const { data: { session } } = await supabase.auth.getSession();
 
             if (!session) {
@@ -210,37 +212,33 @@ function ReportPage() {
                 console.error("Failed to update report status: ", updateError);
             }
 
-            // log the report generation in DB
+            // calculate generation time in seconds
+            const generationTime = Math.round((Date.now() - generationStartTime) / 1000);
+
+            // trigger summary emails (summary_ready + usage warnings if applicable)
             try {
-                const logResponse = await fetch("/api/log-events", {
+                const emailResponse = await fetch("/api/emails/on-summary-complete", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${session.access_token}`,
                     },
                     body: JSON.stringify({
-                        eventType: "report_summarized",
-                        payload: {
-                            report_id: id,
-                            report_title: report?.title || "Untitled",
-                        },
+                        reportId: id,
+                        summaryId: summaryData.id,
+                        generationTime,
                     }),
                 });
 
-                if (!logResponse.ok) {
-                    const logError = await logResponse.json();
-                    console.error("Failed to log event: ", logError);
+                if (!emailResponse.ok) {
+                    const emailError = await emailResponse.json();
+                    console.error("Failed to trigger summary emails: ", emailError);
+                    // don't throw - email failure shouldn't break the summary flow
                 }
             } catch (e: unknown) {
-                const errorMessage = e instanceof Error ? e.message : "Failed to log response";
-
-                await logError(errorMessage, {
-                    component: "ReportPage",
-                    action: "generateSummary",
-                    reportId: String(id),
-                });
-
-                console.error("Error logging event ", errorMessage);
+                const errorMessage = e instanceof Error ? e.message : "Failed to trigger emails";
+                console.error("Error triggering summary emails: ", errorMessage);
+                // don't throw - email failure shouldn't break the summary flow
             }
 
             setSummary(aiResult);
