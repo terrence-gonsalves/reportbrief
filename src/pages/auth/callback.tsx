@@ -92,6 +92,28 @@ export default function AuthCallback() {
                                 userId: user.id,
                             });
                         }
+
+                        // create a basic (free) tier subscription for new users
+                        const { error: subscriptionError } = await supabase
+                            .from("subscriptions")
+                            .insert({
+                                user_id: user.id,
+                                status: "active",
+                                price_id: null, // null = basic/free tier
+                                stripe_customer_id: null,
+                                stripe_subscription_id: null,
+                                current_period_end: null,
+                            });
+
+                        if (subscriptionError) {
+                            console.error("Error creating subscription: ", subscriptionError);
+
+                            await logException(subscriptionError, {
+                                component: "AuthCallback",
+                                action: "createSubscription",
+                                userId: user.id,
+                            });
+                        }
                     }
 
                     const { error: profileError } = await supabase  

@@ -19,7 +19,8 @@ interface SummaryReadyEmailProps {
     topMetric: string;
     notableTrend: string;
     generationTime: number;
-    reportsRemaining: number;
+    reportsRemaining?: number;
+    reportsLimit?: number;
 }
 
 export const SummaryReadyEmail = ({
@@ -30,8 +31,10 @@ export const SummaryReadyEmail = ({
     notableTrend,
     generationTime,
     reportsRemaining,
+    reportsLimit,
 }: SummaryReadyEmailProps) => {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const limit = reportsLimit || 5;
 
     return (
         <Html>
@@ -65,9 +68,11 @@ export const SummaryReadyEmail = ({
                         <Text style={statItem}>
                             Generated in: <strong>{generationTime}s</strong>
                         </Text>
-                        <Text style={statItem}>
-                            Reports remaining this month: <strong>{reportsRemaining} of 5</strong>
-                        </Text>
+                        {reportsRemaining !== undefined && (
+                            <Text style={statItem}>
+                                Reports remaining this month: <strong>{reportsRemaining} of {limit}</strong>
+                            </Text>
+                        )}
                     </Section>
 
                     <Hr style={hr} />

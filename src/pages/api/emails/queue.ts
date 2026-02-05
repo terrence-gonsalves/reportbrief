@@ -47,6 +47,8 @@ export default async function handler(
                 usage_warning: "usage_warnings",
                 usage_limit: "usage_warnings",
                 monthly_reset: "monthly_reset",
+                first_report_reminder: "engagement_emails",
+                inactive_user: "engagement_emails",
             };
 
             const preferenceField = preferenceMap[emailType];
@@ -66,7 +68,9 @@ export default async function handler(
             summary_ready: "Your report summary is ready ✓",
             usage_warning: "You have 1 report remaining this month",
             usage_limit: "You've reached your monthly limit",
-            monthly_reset: "Your 5 free reports have reset! 🔄",
+            monthly_reset: "Your monthly ReportBrief limit has reset! 🔄",
+            first_report_reminder: "Don't forget your first ReportBrief summary 🎯",
+            inactive_user: "We miss you at ReportBrief 👋",
         };
         const subject = subjectMap[emailType] || "ReportBrief Notifications";
         const insertData = {

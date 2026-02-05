@@ -18,16 +18,16 @@ export default function OnboardingBanner() {
 
             // check if the user has any reports
             const { count } = await supabase
-                .from("report")
+                .from("reports")
                 .select("*", { count: "exact", head: true })
                 .eq("user_id", user.id);
 
             // check ig banner was already dismiised
-            const dimissed = localStorage.getItem("onboarding_dimissed");
+            const dismissed = localStorage.getItem("onboarding_dismissed");
 
 
             //show banner only if there are no reports and not dimissed
-            if (count === 0 && !dimissed) {
+            if (count === 0 && !dismissed) {
                 setShow(true);
             }
         } catch (e) {

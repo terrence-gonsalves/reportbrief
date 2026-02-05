@@ -4,6 +4,8 @@ import SummaryReadyEmail from "../templates/summary-ready";
 import UsageWarningEmail from "../templates/usage-warning";
 import UsageLimitEmail from "../templates/usage-limit";
 import MonthlyResetEmail from "../templates/monthly-reset";
+import FirstReportReminderEmail from "../templates/first-report-reminder";
+import InactiveUserEmail from "../templates/inactive-user";
 
 export interface EmailData {
     name?: string;
@@ -47,7 +49,8 @@ export async function renderEmail(
                     topMetric: data.topMetric!,
                     notableTrend: data.notableTrend!,
                     generationTime: data.generationTime!,
-                    reportsRemaining: data.reportsRemaining!,
+                    reportsRemaining: data.reportsRemaining,
+                    reportsLimit: data.reportsLimit,
                 });
                 break;
             case "usage_warning":
@@ -71,6 +74,16 @@ export async function renderEmail(
                     currentMonth: data.currentMonth!,
                     reportsLimit: data.reportsLimit!,
                     lastMonthReports: data.lastMonthReports!,
+                });
+                break;
+            case "first_report_reminder":
+                emailComponent = FirstReportReminderEmail({
+                    name: data.name!,
+                });
+                break;
+            case "inactive_user":
+                emailComponent = InactiveUserEmail({
+                    name: data.name!,
                 });
                 break;
             default: 
