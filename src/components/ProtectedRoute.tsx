@@ -27,11 +27,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
         checkAuth();
 
-        // lilsten for auth changes
+        // listen for auth changes (e.g. sign out or session expired)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             (event, session) => {
                 if (event === "SIGNED_OUT" || !session) {
-                    router.push("/login");
+                    // send to landing page so sign-out doesn't redirect to login
+                    router.push("/");
                 }
             }
         );
