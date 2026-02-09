@@ -25,6 +25,8 @@ export default function OnboardingBanner() {
             // check ig banner was already dismiised
             const dismissed = localStorage.getItem("onboarding_dismissed");
 
+            console.log("Dimissed = ", dismissed);
+            console.log("Report count = ", count);
 
             //show banner only if there are no reports and not dimissed
             if (count === 0 && !dismissed) {
