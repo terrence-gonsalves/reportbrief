@@ -48,7 +48,7 @@ function Dashboard() {
 
     useEffect(() => {
         loadReports();
-    }, []);
+    });
 
     const filterAndSortReports = useCallback(() => {
         let filtered = [...reports];
