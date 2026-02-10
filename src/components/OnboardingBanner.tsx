@@ -53,7 +53,7 @@ export default function OnboardingBanner() {
             if (countError) {
                 console.error("Error counting reports:", countError);
                 setLoading(false);
-                
+
                 return;
             }
 
@@ -86,7 +86,7 @@ export default function OnboardingBanner() {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                eventType: "onboarding_dimissed",
+                eventType: "onboarding_dismissed",
                 payload: {},
             }),
         }).catch(e => console.error("Failed to log dimisseal: ", e));
