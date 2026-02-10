@@ -22,7 +22,7 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (isLoggedIn) {
-      router.push("/upload");
+      router.push("/dashboard");
     } else {
       router.push("login");
     }
