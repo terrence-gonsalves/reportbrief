@@ -224,7 +224,7 @@ export default function AuthCallback() {
                 }
 
                 // redirect to upload page
-                router.push("/upload");
+                router.push("/dashboard");
             } else {
                 router.push("/login");
             }
