@@ -16,61 +16,38 @@ export default function OnboardingBanner() {
         console.log("=== FIRST TIME CHECK STARTED ===");
 
         try {
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
-            if (userError) {
-                console.error("Error getting user: ", userError);
-                setLoading(false);
-                
-                return;
-            }
+            const { data: { user } } = await supabase.auth.getUser();
+
+            console.log(`This is the user data: ${user}`);
 
             if (!user) {
                 console.log("No user has been returned let's get out of here");
-                setLoading(false);
-
-                return;
-            }
-
-            console.log("User ID:", user.id);
-
-            // check ig banner was already dismiised
-            const dismissed = localStorage.getItem("onboarding_dismissed");
-
-            if (dismissed === 'true') {
-                console.log("Banner was previously dimissed");
-                setLoading(false);
-
                 return;
             }
 
             // check if the user has any reports
-            const { count, error: countError } = await supabase
+            const { count } = await supabase
                 .from("reports")
                 .select("*", { count: "exact", head: true })
                 .eq("user_id", user.id);
-            
-            if (countError) {
-                console.error("Error counting reports:", countError);
-                setLoading(false);
 
-                return;
-            }
+            console.log(`This is total counts of reports for this user: ${count}`);
 
-            console.log(`This is total counts of reports for this user: ${count}`);            
+            // check ig banner was already dismiised
+            const dismissed = localStorage.getItem("onboarding_dismissed");
+
+            console.log("Dimissed = ", dismissed);
 
             //show banner only if there are no reports and not dimissed
-            if (count === 0) {
-                console.log("✅ Showing onboarding banner (0 reports, not dismissed)");
+            if (count === 0 && !dismissed) {
+                console.group("count is 0 and dismissed is false/empty");
+                console.log("Set show banner to TRUE");
                 setShow(true);
-            } else {
-                console.log("❌ Not showing banner - user has", count, "reports");
             }
         } catch (e) {
             console.log(`There has been an error: ${e}`);
             console.error("Error checking first-time status: ", e);
         } finally {
-            console.log("Setting loading to false");
             setLoading(false);
         }
     };
@@ -80,31 +57,20 @@ export default function OnboardingBanner() {
 
         localStorage.setItem("onboarding_dismissed", "true");
         setShow(false);
-        console.log("localStorage set:", localStorage.getItem("onboarding_dismissed"));
+        console.log("Local Storage should be set");
+        console.log(`Local storage value for onboarding_dismissed: ${localStorage.getItem("onboarding_dismissed")}`);
 
         fetch("/api/log-events", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-                eventType: "onboarding_dismissed",
+                eventType: "onboarding_dimissed",
                 payload: {},
             }),
         }).catch(e => console.error("Failed to log dimisseal: ", e));
     };
 
-    console.log("Render state - loading:", loading, "show:", show);
-
-    if (loading) {
-        console.log("Banner loading, returning null");
-        return null;
-    }
-
-    if (!show) {
-        console.log("Banner show=false, returning null");
-        return null;
-    }
-
-    console.log("✅ Rendering onboarding banner!");
+    if (loading || !show) return null;
 
     return (
         <div className="bg-linear-to-r from-blue-600 to-blue-700 border-b border-blue-800">
