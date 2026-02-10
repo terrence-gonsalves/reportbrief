@@ -6,19 +6,13 @@ export default function OnboardingBanner() {
     const [show, setShow] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    console.log("=== ONBOARDING BANNER STARTED ===");
-
     useEffect(() => {
         checkIfFirstTime();
     }, []);
 
     const checkIfFirstTime = async () => {
-        console.log("=== FIRST TIME CHECK STARTED ===");
-
         try {
             const { data: { user } } = await supabase.auth.getUser();
-
-            console.log(`This is the user data: ${user}`);
 
             if (!user) {
                 console.log("No user has been returned let's get out of here");
@@ -31,21 +25,14 @@ export default function OnboardingBanner() {
                 .select("*", { count: "exact", head: true })
                 .eq("user_id", user.id);
 
-            console.log(`This is total counts of reports for this user: ${count}`);
-
             // check ig banner was already dismiised
             const dismissed = localStorage.getItem("onboarding_dismissed");
 
-            console.log("Dimissed = ", dismissed);
-
             //show banner only if there are no reports and not dimissed
             if (count === 0 && !dismissed) {
-                console.group("count is 0 and dismissed is false/empty");
-                console.log("Set show banner to TRUE");
                 setShow(true);
             }
         } catch (e) {
-            console.log(`There has been an error: ${e}`);
             console.error("Error checking first-time status: ", e);
         } finally {
             setLoading(false);
@@ -53,12 +40,8 @@ export default function OnboardingBanner() {
     };
 
     const handleDismiss = () => {
-        console.log("=== BANNER DISMISSED STARTED===");
-
         localStorage.setItem("onboarding_dismissed", "true");
         setShow(false);
-        console.log("Local Storage should be set");
-        console.log(`Local storage value for onboarding_dismissed: ${localStorage.getItem("onboarding_dismissed")}`);
 
         fetch("/api/log-events", {
             method: "POST",
