@@ -252,6 +252,7 @@ export async function queueMonthlyResetEmails() {
     const { tier, limit } = await getUserTierAndLimit(userId);
 
     if (limit === null) {
+      
       // pro/unlimited – no reset email
       continue;
     }
