@@ -104,6 +104,16 @@ function Upload() {
                 return;
             }
 
+            const usageCheck = await fetch("/api/check-usage", {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+            });
+            const usageResult = await usageCheck.json();
+            if (!usageResult.allowed) {
+                setError(usageResult.reason || "You have reached your upload limit for this month");
+                setUploading(false);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("file", file);
 
@@ -172,11 +182,21 @@ function Upload() {
                 return;
             }
 
+            const usageCheck = await fetch("/api/check-usage", {
+                headers: { Authorization: `Bearer ${session.access_token}` },
+            });
+            const usageResult = await usageCheck.json();
+            if (!usageResult.allowed) {
+                setError(usageResult.reason || "You have reached your upload limit for this month");
+                setUploading(false);
+                return;
+            }
+
             // create form data
             const formData = new FormData();
             formData.append("file", file);
 
-            // upload with tokeen
+            // upload with token
             const res = await fetch("/api/upload", {
                 method: "POST",
                 headers: {
