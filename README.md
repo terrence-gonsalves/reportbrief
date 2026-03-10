@@ -83,9 +83,11 @@ Built for Salesforce admins, RevOps, and operators who need insights without man
 
 Create a .env.local file in the project root:
 
-`NEXT_PUBLIC_SUPABASE_URL=your_supabase_url`
-`NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key`
-`OPENAI_API_KEY=your_openai_key_optional`
+```bash
+  NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+  NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+  OPENAI_API_KEY=your_openai_key_optional
+```
 
 4. Run the development server
 
