@@ -50,13 +50,13 @@ export const SummaryReadyEmail = ({
                         Your AI summary for <strong>{reportName}</strong> is ready!
                     </Text>
 
-                {(topMetric || notableTrend) && (
+                    {(topMetric || notableTrend) && (
                     <Section style={highlightsSection}>
                         <Text style={highlightsTitle}>Key Highlights:</Text>
                         {topMetric && <Text style={highlight}>• {topMetric}</Text>}
                         {notableTrend && <Text style={highlight}>• {notableTrend}</Text>}
                     </Section>
-                )}
+                    )}
 
                     <Section style={buttonSection}>
                         <Button style={button} href={`${baseUrl}/report/${reportId}`}>

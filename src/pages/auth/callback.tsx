@@ -98,7 +98,7 @@ export default function AuthCallback() {
                             .from("subscriptions")
                             .insert({
                                 user_id: user.id,
-                                status: "active",
+                                status: "basic",
                                 price_id: null, // null = basic/free tier
                                 stripe_customer_id: null,
                                 stripe_subscription_id: null,

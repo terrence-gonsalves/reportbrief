@@ -19,13 +19,12 @@ export async function canGenerateReport(userId: string): Promise<{
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // count reports generated this month
+    // count reports uploaded this month
     const { count, error } = await supabaseAdmin
-        .from("audit_logs")
+        .from("reports")
         .select("*", { count: "exact", head: true })
         .eq("user_id", userId)
-        .eq("event_type", "report_uploaded")
-        .gte("created_at", startOfMonth.toISOString());
+        .gte("uploaded_at", startOfMonth.toISOString());
     
     if (error) {
         console.error("Error checking usage: ", error);
