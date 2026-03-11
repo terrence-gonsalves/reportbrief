@@ -84,46 +84,44 @@ function ReportPage() {
     }, [id, loadReport]);
 
     const generateSummary = async () => {
-        if (!id) {
-            await logError("Generate summary called without report ID", {
+        if (!id || !report) {
+            await logError("Generate summary called without report ID or report data", {
                 component: "ReportPage",
                 action: "generateSummary",
             });
-
-            setError("No report ID found");
-
+    
+            setError("No report found");
             return;
         }
-
+    
         try {
             setGenerating(true);
             setError("");
-
+    
             const generationStartTime = Date.now();
-
+    
             const { data: { session } } = await supabase.auth.getSession();
-
+    
             if (!session) {
                 await logError("Generate summary attempted without session", {
                     component: "ReportPage",
                     action: "generateSummary",
                     reportId: String(id),
                 });
-
+    
                 setError("You must be logged in");
-
                 return;
             }
-
+    
             // check if user can generate a report
             const usageCheck = await fetch("/api/check-usage", {
-                headers:{
+                headers: {
                     Authorization: `Bearer ${session.access_token}`,
                 },
             });
-
+    
             const usageResult = await usageCheck.json();
-
+    
             if (!usageResult.allowed) {
                 await logError("Usage limit exceeded", {
                     component: "ReportPage",
@@ -131,90 +129,31 @@ function ReportPage() {
                     reportId: String(id),
                     reason: usageResult.reason,
                 });
-
+    
                 setError(usageResult.reason || "Cannot generate report at this time");
-
                 return;
             }
-
-            const { data: samples, error: samplesError } =  await supabase
-                .from("report_row_samples")
-                .select("sample_rows")
-                .eq("report_id", id)
-                .single();
-
-            if (samplesError || !samples) {
-                throw new Error("Failed to fetch report data");
-            }
-
-            // call Claude API
+    
+            // call the real Claude API endpoint
             const response = await fetch("/api/summarise", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${session.access_token}`,
                 },
-                body: JSON.stringify({ reportId: report!.id }),
+                body: JSON.stringify({ reportId: report.id }),
             });
-
+    
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || "Failed tp generate summary");
+                throw new Error(errorData.error || "Failed to generate summary");
             }
-
+    
             const data = await response.json();
-            const aiResult = data.result;
-
-            // save to DB
-            const { data: summaryData, error: summaryError } = await supabase
-                .from("summaries")
-                .insert({
-                    report_id: id,
-                    user_id: session.user.id,
-                    summary_text: aiResult.summary,
-                    summary_struct: aiResult,
-                    model: "claude-sonnet-4-mock",
-                    tokens_used: 0,
-                })
-                .select()
-                .single();
-
-            if (summaryError) {
-                throw new Error("Failed to save summary");
-            }
-
-            await supabase.from("audit_logs").insert({
-                user_id: session.user.id,
-                event_type: "report_summarized",
-                payload: {
-                    report_id: id,
-                    report_title: report?.title || "Untitled",
-                },
-            });
-
-            // update report status
-            const { error: updateError } = await supabase
-                .from("reports")
-                .update({
-                    status: "summarized",
-                    summary_id: summaryData.id,
-                })
-                .eq("id", id);
-            
-            if (updateError) {
-                await logError("Failed to update report status", {
-                    component: "ReportPage",
-                    action: "generateSummary",
-                    reportId: String(id),
-                    reason: updateError,
-                });
-
-                // keep for development purposes
-                console.error("Failed to update report status: ", updateError);
-            }
-
+    
             // calculate generation time in seconds
             const generationTime = Math.round((Date.now() - generationStartTime) / 1000);
-
+    
             // trigger summary emails (summary_ready + usage warnings if applicable)
             try {
                 const emailResponse = await fetch("/api/emails/on-summary-complete", {
@@ -225,25 +164,28 @@ function ReportPage() {
                     },
                     body: JSON.stringify({
                         reportId: id,
-                        summaryId: summaryData.id,
+                        summaryId: data.summaryId,
                         generationTime,
                     }),
                 });
-
+    
                 if (!emailResponse.ok) {
                     const emailError = await emailResponse.json();
-                    console.error("Failed to trigger summary emails: ", emailError);
+                    console.error("Failed to trigger summary emails:", emailError);
+
                     // don't throw - email failure shouldn't break the summary flow
                 }
             } catch (e: unknown) {
                 const errorMessage = e instanceof Error ? e.message : "Failed to trigger emails";
-                console.error("Error triggering summary emails: ", errorMessage);
+                console.error("Error triggering summary emails:", errorMessage);
+
                 // don't throw - email failure shouldn't break the summary flow
             }
-
-            setSummary(aiResult);
-
-            // reload report to get update status
+    
+            // set the summary from the API response
+            setSummary(data.summary);
+    
+            // reload report to get updated status
             await loadReport();
         } catch (e: unknown) {
             await logException(e, {
@@ -251,7 +193,7 @@ function ReportPage() {
                 action: "generateSummary",
                 reportId: String(id),
             });
-
+    
             const errorMessage = e instanceof Error ? e.message : "Failed to generate summary";
             setError(errorMessage);
         } finally {
