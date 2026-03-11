@@ -147,13 +147,13 @@ function ReportPage() {
                 throw new Error("Failed to fetch report data");
             }
 
-            // call mock API
-            const response = await fetch("/api/claude-summarise", {
+            // call Claude API
+            const response = await fetch("/api/summarise", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ rows: samples.sample_rows }),
+                body: JSON.stringify({ reportId: report!.id }),
             });
 
             if (!response.ok) {
