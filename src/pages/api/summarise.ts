@@ -42,8 +42,6 @@ export default async function handler(
 
     const { reportId } = req.body;
 
-    console.log("Summarise API called with:", { reportId, userId: user.id });
-
     if (!reportId) {
         console.error("Missing reportId in request body:", req.body);
         return res.status(400).json({ error: "Missing reportId" });
@@ -54,8 +52,6 @@ export default async function handler(
     const usageCheck = await canGenerateReport(user.id);
     
     if (!usageCheck.allowed) {
-        console.log("Usage limit exceeded for user:", user.id);
-        
         return res.status(403).json({ 
             error: usageCheck.reason || "Usage limit exceeded" 
         });
@@ -73,19 +69,10 @@ export default async function handler(
         return res.status(404).json({ error: "Report samples not found" });
     }
 
-    const startTime = Date.now();
-
     try {
       
         // call Claude API to generate summary
-        console.log("Calling Claude API for report:", reportId);
         const aiResult = await callClaudeAPI(samples.sample_rows);
-
-        const endTime = Date.now();
-        const generationTime = Math.round((endTime - startTime) / 1000);
-
-        console.log("Claude API completed in", generationTime, "seconds");
-        console.log("Tokens used:", aiResult._tokens);
 
         // save summary to database
         const { data: summary, error: insertError } = await supabase
