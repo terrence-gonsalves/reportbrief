@@ -49,6 +49,18 @@ export default async function handler(
         return res.status(400).json({ error: "Missing reportId" });
     }
 
+    // prevent direct API calls from bypassing the limit
+    const { canGenerateReport } = await import("@/lib/usageTrackerServer");
+    const usageCheck = await canGenerateReport(user.id);
+    
+    if (!usageCheck.allowed) {
+        console.log("Usage limit exceeded for user:", user.id);
+        
+        return res.status(403).json({ 
+            error: usageCheck.reason || "Usage limit exceeded" 
+        });
+    }
+
     // fetch the report sample rows
     const { data: samples, error } = await supabase
         .from("report_row_samples")
