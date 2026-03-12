@@ -115,8 +115,6 @@ export default async function handler(
             })
             .eq("id", reportId);
 
-        console.log("Summary saved successfully:", summary.id);
-
         return res.status(200).json({
             success: true,
             summary: aiResult,
@@ -168,58 +166,50 @@ async function callClaudeAPI(rows: Record<string, unknown>[]) {
 
     Analyze this data and respond with ONLY valid JSON matching the specified format. Do not include markdown code blocks or any other text.`;
 
-    console.log("Calling Claude API...");
-    console.log("Sample data rows:", sampleData.length);
-    console.log("Headers:", headers);
+    try {
+        const message = await anthropic.messages.create({
+            model: "claude-sonnet-4-20250514",
+            max_tokens: 2000,
+            temperature: 0.3,
+            messages: [
+            {
+                role: "user",
+                content: prompt,
+            },
+            ],
+        });
 
-  try {
-    const message = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      temperature: 0.3,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
-    });
+        // extract text content
+        const content = message.content[0];
 
-    console.log("Claude API response received");
-    console.log("Usage:", message.usage);
+        if (content.type !== "text") {
+            throw new Error("Unexpected response type from Claude");
+        }
 
-    // Extract text content
-    const content = message.content[0];
-    if (content.type !== "text") {
-        throw new Error("Unexpected response type from Claude");
-    }
+        const responseText = content.text;
 
-    const responseText = content.text;
-
-      // parse the JSON response
-      try {
-          const cleaned = responseText
+        // parse the JSON response
+        try {
+            const cleaned = responseText
             .replace(/```json\n?/g, "")
             .replace(/```\n?/g, "")
             .trim();
 
-          const parsed = JSON.parse(cleaned);
+            const parsed = JSON.parse(cleaned);
 
-          console.log("Successfully parsed Claude response");
-
-        // return the parsed result with token usage
-          return {
-              ...parsed,
-              _tokens: {
-                  input: message.usage.input_tokens,
-                  output: message.usage.output_tokens,
-              },
-          };
-      } catch (parseError) {
-          console.error("Failed to parse Claude response:", parseError);
-          console.error("Raw response:", responseText);
-          throw new Error(`Failed to parse Claude response: ${responseText.substring(0, 200)}...`);
-      }
+            // return the parsed result with token usage
+            return {
+                ...parsed,
+                _tokens: {
+                    input: message.usage.input_tokens,
+                    output: message.usage.output_tokens,
+                },
+            };
+        } catch (parseError) {
+            console.error("Failed to parse Claude response:", parseError);
+            console.error("Raw response:", responseText);
+            throw new Error(`Failed to parse Claude response: ${responseText.substring(0, 200)}...`);
+        }
     } catch (error) {
         console.error("Claude API error:", error);
         throw error;
