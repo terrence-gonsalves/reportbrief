@@ -4,7 +4,6 @@ import fs from "fs";
 import { parseCsv } from "@/lib/csv";
 import { createSupabaseServerClient  } from "@/lib/supabaseServer";
 import { logAuditEvent, logError } from "@/lib/auditLog";
-import { canGenerateReport } from "@/lib/usageTrackerServer";
 
 export const config = {
     api: { bodyParser: false }
@@ -27,12 +26,6 @@ export default async function handler(
 
     if (authError || !user) {
         return res.status(401).json({ error: "Unauthorised" });
-    }
-
-    // enforce upload limit before processing anything
-    const usageCheck = await canGenerateReport(user.id);
-    if (!usageCheck.allowed) {
-        return res.status(403).json({ error: usageCheck.reason || "Upload limit reached" });
     }
 
     try {
