@@ -61,12 +61,11 @@ async function getSummariesThisMonth(userId: string): Promise<number> {
   const startOfMonth = new Date(now.getUTCFullYear(), now.getUTCMonth(), 1);
 
   const { count, error } = await supabaseAdmin
-    .from("audit_logs")
+    .from("summaries")
     .select("*", { count: "exact", head: true })
     .eq("user_id", userId)
-    .eq("event_type", "report_summarized")
     .gte("created_at", startOfMonth.toISOString());
-
+    
   if (error) {
     console.error("Error counting summaries this month: ", error);
 
