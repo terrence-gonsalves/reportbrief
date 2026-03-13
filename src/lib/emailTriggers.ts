@@ -100,6 +100,11 @@ export async function triggerSummaryEmails({
   summaryId,
   generationTime,
 }: TriggerSummaryEmailsProps) {
+  console.log("=== TRIGGER SUMMARY EMAILS STARTED ===");
+  console.log("User ID:", userId);
+  console.log("Report ID:", reportId);
+  console.log("Summary ID:", summaryId);
+
   try {
     const [{ data: user, error: userError }, { data: report, error: reportError }, { data: summary, error: summaryError }] =
       await Promise.all([
@@ -145,6 +150,10 @@ export async function triggerSummaryEmails({
     const { tier, limit } = await getUserTierAndLimit(userId);
     const summariesThisMonth = await getSummariesThisMonth(userId);
 
+    console.log("User tier:", tier);
+    console.log("User limit:", limit);
+    console.log("Summaries this month:", summariesThisMonth);
+
     const reportsRemaining =
       limit !== null ? Math.max(0, limit - summariesThisMonth) : null;
 
@@ -171,15 +180,23 @@ export async function triggerSummaryEmails({
       const warningThreshold = limit - 1;
       const limitThreshold = limit;
 
+      console.log("Warning threshold:", warningThreshold);
+      console.log("Limit threshold:", limitThreshold);
+
       let usageEmailType: EmailType | null = null;
 
       if (summariesThisMonth === warningThreshold) {
+        console.log("✅ TRIGGERING USAGE WARNING (4/5)")
         usageEmailType = "usage_warning";
       } else if (summariesThisMonth === limitThreshold) {
+        console.log("✅ TRIGGERING USAGE LIMIT (5/5)");
         usageEmailType = "usage_limit";
+      } else {
+        console.log("❌ No usage email needed. Count:", summariesThisMonth);
       }
 
       if (usageEmailType) {
+        console.log("Queueing usage email type:", usageEmailType);
         const now = new Date();
         const nextMonth = new Date(
           now.getUTCFullYear(),
@@ -203,8 +220,12 @@ export async function triggerSummaryEmails({
           emailType: usageEmailType,
           data: usageData,
         });
+      } else {
+        console.log("User has unlimited tier, skipping usage emails");
       }
     }
+
+    console.log("=== TRIGGER SUMMARY EMAILS COMPLETED ===");
   } catch (e) {
     console.error("Error in triggerSummaryEmails: ", e);
 

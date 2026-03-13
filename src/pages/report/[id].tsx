@@ -174,6 +174,8 @@ function ReportPage() {
                     console.error("Failed to trigger summary emails:", emailError);
 
                     // don't throw - email failure shouldn't break the summary flow
+                } else {
+                    console.log("✅ Summary emails triggered successfully");
                 }
             } catch (e: unknown) {
                 const errorMessage = e instanceof Error ? e.message : "Failed to trigger emails";

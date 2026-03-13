@@ -48,6 +48,7 @@ export async function queueEmailForUser({
   data,
   scheduledAt,
 }: QueueEmailParams) {
+  
   // fetch user with preferences
   const { data: userData, error: userError } = await supabaseAdmin
     .from("users")
