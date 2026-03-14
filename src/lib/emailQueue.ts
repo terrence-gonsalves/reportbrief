@@ -17,18 +17,18 @@ const subjectMap: Record<EmailType, (data: EmailData) => string> = {
   usage_warning: () => "You have 1 report remaining this month",
   usage_limit: () => "You've reached your monthly limit",
   monthly_reset: () => "Your monthly ReportBrief limit has reset! 🔄",
-  first_report_reminder: () => "Don’t forget your first ReportBrief summary 🎯",
+  first_report_reminder: () => "Don't forget your first ReportBrief summary 🎯",
   inactive_user: () => "We miss you at ReportBrief 👋",
 };
 
 const preferenceMap: Record<EmailType, string> = {
   welcome: "welcome_email",
   summary_ready: "summary_ready",
-  usage_warning: "usage_warnings",
-  usage_limit: "usage_warnings",
+  usage_warning: "usage_warning",
+  usage_limit: "usage_limit",
   monthly_reset: "monthly_reset",
-  first_report_reminder: "engagement_emails",
-  inactive_user: "engagement_emails",
+  first_report_reminder: "first_report_reminder",
+  inactive_user: "inactive_user",
 };
 
 interface QueueEmailParams {
