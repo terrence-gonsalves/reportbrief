@@ -44,11 +44,11 @@ export default async function handler(
             const preferenceMap: { [key: string]: string } = {
                 welcome: "welcome_email",
                 summary_ready: "summary_ready",
-                usage_warning: "usage_warnings",
-                usage_limit: "usage_warnings",
+                usage_warning: "usage_warning",
+                usage_limit: "usage_limit",
                 monthly_reset: "monthly_reset",
-                first_report_reminder: "engagement_emails",
-                inactive_user: "engagement_emails",
+                first_report_reminder: "first_report_reminder",
+                inactive_user: "inactive_user",
             };
 
             const preferenceField = preferenceMap[emailType];
