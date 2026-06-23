@@ -436,3 +436,87 @@ export async function queueInactiveUserEmails() {
     return { processed };
 }
 
+/**
+ * Queue account deletion warning emails for users inactive 30+ days.
+ * Runs daily; sends once per user per month.
+ */
+export async function queueAccountDeletionWarningEmails() {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - 30
+    );
+  
+    const { data: users, error } = await supabaseAdmin
+        .from("users")
+        .select("id, name, email, updated_at, email_preferences(*)")
+        .lt("updated_at", thirtyDaysAgo.toISOString());
+  
+    if (error || !users) {
+        await logAuditEvent("error", null, {
+            component: "emailTriggers",
+            action: "queueAccountDeletionWarningEmails",
+            error,
+        });
+  
+        throw error || new Error("Failed to fetch inactive users");
+    }
+  
+    let processed = 0;
+  
+    for (const user of users) {
+        const userId = user.id as string;
+  
+        // check if we already sent this warning this month
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        
+        const { count: existingWarnings } = await supabaseAdmin
+            .from("email_queue")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("email_type", "account_deletion_warning")
+            .gte("created_at", startOfMonth.toISOString());
+    
+        // skip if we already sent warning this month
+        if ((existingWarnings || 0) > 0) {
+            continue;
+        }
+  
+        const deletionDate = new Date(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate() + 7
+        );
+    
+        const data: EmailData = {
+            name: user.name || user.email || "",
+            deletionDate: deletionDate.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+            }),
+        };
+  
+        try {
+            await queueEmailForUser({
+                userId,
+                emailType: "account_deletion_warning",
+                data,
+            });
+    
+            processed++;
+        } catch (e) {
+            console.error("Failed to queue account deletion warning email:", e);
+    
+            await logAuditEvent("email_failed", userId, {
+                component: "emailTriggers",
+                action: "queueAccountDeletionWarningEmails",
+                error: e,
+            });
+        }
+    }
+  
+    return { processed };
+}
+

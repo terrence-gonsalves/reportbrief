@@ -31,7 +31,7 @@ export default async function handler(
             action: "processEmails",
         });
 
-        console.error("Error in process-email-queue cro n: ", e);
+        console.error("Error in process-email-queue cron: ", e);
 
         return res.status(500).json({
             success: false,

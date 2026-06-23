@@ -18,7 +18,8 @@ export type AuditEventType =
     | "email_sent"
     | "email_failed"
     | "email_queued"
-    | "email_processed";
+    | "email_processed"
+    | "accounts_deleted";
 
 interface AuditLogPayload {
     [key: string]: unknown;

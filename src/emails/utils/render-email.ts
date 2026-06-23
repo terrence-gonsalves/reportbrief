@@ -20,6 +20,7 @@ export interface EmailData {
     resetDate?: string;
     currentMonth?: string;
     lastMonthReports?: number;
+    deletionDate?: string;
 }
 
 /**
