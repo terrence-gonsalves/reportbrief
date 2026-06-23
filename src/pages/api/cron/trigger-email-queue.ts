@@ -9,7 +9,7 @@ export default async function handler(
     const { secret } = req.query;
 
     if (secret !== process.env.CRON_SECRET) {
-        return res.status(401).json({ error: "Unauthrozed" });
+        return res.status(401).json({ error: "Unauthrized" });
     }
 
     try {
@@ -17,7 +17,7 @@ export default async function handler(
 
         return res.status(200).json({
             success: true,
-            error: "Email queue processed successfully",
+            message: "Email queue processed successfully",
             results: results,
         });
     } catch (e) {        
