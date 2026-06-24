@@ -73,7 +73,7 @@ export default async function handler(
                 break;
 
             case "delete_inactive_accounts":
-                results = await deleteInactiveAccounts();
+                results = await queueAccountDeletionWarningEmails();
                 break;
 
             default:
