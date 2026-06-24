@@ -81,6 +81,7 @@ export default function AuthCallback() {
                                 monthly_reset: true,
                                 engagement_emails: true,
                                 product_updates: true,
+                                account_deletion_warning: true,
                             });
                         
                         if (preferencesError) {
