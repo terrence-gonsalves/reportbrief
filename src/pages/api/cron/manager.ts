@@ -8,7 +8,6 @@ import {
 } from "@/lib/emailTriggers";
 import { logException } from "@/lib/errorLog";
 import { logAuditEvent } from "@/lib/auditLog";
-import { supabaseAdmin } from "@/lib/supabaseServer";
 
 type CronJob = 
     | "email_queue" 
