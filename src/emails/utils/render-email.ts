@@ -6,6 +6,7 @@ import UsageLimitEmail from "../templates/usage-limit";
 import MonthlyResetEmail from "../templates/monthly-reset";
 import FirstReportReminderEmail from "../templates/first-report-reminder";
 import InactiveUserEmail from "../templates/inactive-user";
+import AccountDeletionWarningEmail from "../templates/account-deletion-warning";
 
 export interface EmailData {
     name?: string;
@@ -85,6 +86,12 @@ export async function renderEmail(
             case "inactive_user":
                 emailComponent = InactiveUserEmail({
                     name: data.name!,
+                });
+                break;
+            case "account_deletion_warning":
+                emailComponent = AccountDeletionWarningEmail({
+                    name: data.name!,
+                    deletionDate: data.deletionDate!,
                 });
                 break;
             default: 
