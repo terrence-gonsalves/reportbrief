@@ -78,7 +78,8 @@ export const SummaryReadyEmail = ({
                     <Hr style={hr} />
 
                     <Text style={footer}>
-                        — ReportBrief
+                        — The ReportBrief Team<br />
+                        Transform your Salesforce reports into AI-powered insights
                     </Text>
                 </Container>
             </Body>
