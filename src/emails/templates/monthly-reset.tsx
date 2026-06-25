@@ -53,17 +53,18 @@ export const MonthlyResetEmail = ({
                         </Button>
                     </Section>
 
-                {lastMonthReports > 0 && (
+                    {lastMonthReports > 0 && (
                     <Text style={statsText}>
                         Last month you analyzed <strong>{lastMonthReports} report{lastMonthReports !== 1 ? 's' : ''}</strong>. 
                         Let&apos;s make this month even better!
                     </Text>
-                )}
+                    )}
 
                     <Hr style={hr} />
 
                     <Text style={footer}>
-                        — ReportBrief
+                        — The ReportBrief Team<br />
+                        Transform your Salesforce reports into AI-powered insights
                     </Text>
                 </Container>
             </Body>

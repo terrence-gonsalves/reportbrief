@@ -53,16 +53,17 @@ export const AccountDeletionWarningEmail = ({
                             <strong>To prevent deletion, simply log in to your account before {deletionDate}.</strong>
                         </Text>
             
-                        <Section style={buttonContainer}>
+                        <Section style={buttonSection}>
                             <Button style={button} href={baseUrl}>
                                 Log In to ReportBrief
                             </Button>
-                        </Section>
-    
+                        </Section>   
+
                         <Hr style={hr} />
-            
+
                         <Text style={footer}>
-                            If you have any questions or concerns, please contact us at support@reportbrief.com
+                            — The ReportBrief Team<br />
+                            Transform your Salesforce reports into AI-powered insights
                         </Text>
                     </Section>
                 </Container>
@@ -105,20 +106,21 @@ const paragraph = {
     marginBottom: "12px",
 };
 
-const buttonContainer = {
-    textAlign: "center" as const,
-    marginTop: "24px",
-    marginBottom: "24px",
+const buttonSection = {
+    padding: "0 48px",
+    margin: "32px 0",
 };
 
 const button = {
-    backgroundColor: "#000",
-    color: "#fff",
-    padding: "12px 24px",
+    backgroundColor: "#000000",
     borderRadius: "6px",
+    color: "#ffffff",
+    fontSize: "16px",
+    fontWeight: "600",
     textDecoration: "none",
-    fontWeight: "bold",
-    fontSize: "14px",
+    textAlign: "center" as const,
+    display: "block",
+    padding: "12px 20px",
 };
 
 const hr = {
