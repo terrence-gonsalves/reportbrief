@@ -54,10 +54,10 @@ export async function queueEmailForUser({
   
     // fetch user with preferences
     const { data: userData, error: userError } = await supabaseAdmin
-      .from("users")
-      .select("email, email_preferences(*)")
-      .eq("id", userId)
-      .single();
+        .from("users")
+        .select("email, email_preferences(*)")
+        .eq("id", userId)
+        .single();
 
     if (userError || !userData) {
         await logAuditEvent("email_failed", userId, {
