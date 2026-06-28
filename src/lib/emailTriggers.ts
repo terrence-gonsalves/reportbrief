@@ -442,73 +442,116 @@ export async function queueInactiveUserEmails() {
  */
 export async function queueAccountDeletionWarningEmails() {
     const now = new Date();
-    const thirtyDaysAgo = new Date(
+
+    const freeCutoff = new Date(Date.UTC(
         now.getUTCFullYear(),
         now.getUTCMonth(),
         now.getUTCDate() - 30
-    );
-  
+    ));
+
+    const paidCutoff = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() - 60
+    ));
+
+    const scheduledDeletionAt = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate() + 7
+    ));
+
     const { data: users, error } = await supabaseAdmin
         .from("users")
-        .select("id, name, email, updated_at, email_preferences(*)")
-        .lt("updated_at", thirtyDaysAgo.toISOString());
-  
+        .select(`
+            id,
+            name,
+            email,
+            updated_at,
+            scheduled_deletion_at,
+            subscriptions(status, price_id, stripe_subscription_id)
+        `)
+        .is("scheduled_deletion_at", null);
+
     if (error || !users) {
         await logAuditEvent("error", null, {
             component: "emailTriggers",
             action: "queueAccountDeletionWarningEmails",
             error,
         });
-  
-        throw error || new Error("Failed to fetch inactive users");
+
+        throw error || new Error("Failed to fetch users for deletion warnings");
     }
-  
+
     let processed = 0;
-  
+    let freeWarnings = 0;
+    let paidWarnings = 0;
+
     for (const user of users) {
         const userId = user.id as string;
-  
-        // check if we already sent this warning this month
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        
-        const { count: existingWarnings } = await supabaseAdmin
-            .from("email_queue")
-            .select("*", { count: "exact", head: true })
-            .eq("user_id", userId)
-            .eq("email_type", "account_deletion_warning")
-            .gte("created_at", startOfMonth.toISOString());
-    
-        // skip if we already sent warning this month
-        if ((existingWarnings || 0) > 0) {
+        const updatedAt = new Date(user.updated_at as string);
+
+        const subscriptions = Array.isArray(user.subscriptions)
+            ? user.subscriptions
+            : [];
+
+        const isPaid = subscriptions.some((sub) =>
+            sub.status === "active" &&
+            Boolean(sub.stripe_subscription_id || sub.price_id)
+        );
+
+        const inactiveDays = isPaid ? 60 : 30;
+        const cutoff = isPaid ? paidCutoff : freeCutoff;
+        const deletionNoticeType = isPaid ? "paid_60_day" : "free_30_day";
+
+        if (updatedAt >= cutoff) {
             continue;
         }
-  
-        const deletionDate = new Date(
-            now.getUTCFullYear(),
-            now.getUTCMonth(),
-            now.getUTCDate() + 7
-        );
-    
+
         const data: EmailData = {
             name: user.name || user.email || "",
-            deletionDate: deletionDate.toLocaleDateString("en-US", {
+            inactiveDays,
+            deletionDate: scheduledDeletionAt.toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
                 day: "numeric",
             }),
         };
-  
+
         try {
-            await queueEmailForUser({
+            const result = await queueEmailForUser({
                 userId,
                 emailType: "account_deletion_warning",
                 data,
             });
-    
+
+            if (!result.queued) {
+                continue;
+            }
+
+            const { error: updateError } = await supabaseAdmin
+                .from("users")
+                .update({
+                    inactive_deletion_notice_sent_at: now.toISOString(),
+                    scheduled_deletion_at: scheduledDeletionAt.toISOString(),
+                    deletion_notice_type: deletionNoticeType,
+                })
+                .eq("id", userId);
+
+            if (updateError) {
+                throw updateError;
+            }
+
             processed++;
+
+            if (isPaid) {
+                paidWarnings++;
+            } else {
+                freeWarnings++;
+            }
         } catch (e) {
             console.error("Failed to queue account deletion warning email:", e);
-    
+
             await logAuditEvent("email_failed", userId, {
                 component: "emailTriggers",
                 action: "queueAccountDeletionWarningEmails",
@@ -516,7 +559,11 @@ export async function queueAccountDeletionWarningEmails() {
             });
         }
     }
-  
-    return { processed };
+
+    return {
+        processed,
+        freeWarnings,
+        paidWarnings,
+    };
 }
 
