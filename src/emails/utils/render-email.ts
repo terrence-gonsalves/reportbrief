@@ -93,6 +93,7 @@ export async function renderEmail(
                 emailComponent = AccountDeletionWarningEmail({
                     name: data.name!,
                     deletionDate: data.deletionDate!,
+                    inactiveDays: data.inactiveDays!,
                 });
                 break;
             default: 
