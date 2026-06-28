@@ -10,6 +10,9 @@ interface UserUpsertData {
     login_count: number;
     updated_at: string;
     first_login_at?: string;
+    inactive_deletion_notice_sent_at?: string | null;
+    scheduled_deletion_at?: string | null;
+    deletion_policy?: string | null;
 }
 
 export default function AuthCallback() {
@@ -65,6 +68,11 @@ export default function AuthCallback() {
                         name: userName,
                         login_count: newLoginCount,
                         updated_at: new Date().toISOString(),
+                    
+                        // clear pending inactive deletion state on login
+                        inactive_deletion_notice_sent_at: null,
+                        scheduled_deletion_at: null,
+                        deletion_policy: null,
                     };
 
                     if (isFirstLogin) { 
