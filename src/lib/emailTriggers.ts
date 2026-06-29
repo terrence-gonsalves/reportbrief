@@ -455,11 +455,9 @@ export async function queueAccountDeletionWarningEmails() {
         now.getUTCDate() - 60
     ));
 
-    const scheduledDeletionAt = new Date(Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth(),
-        now.getUTCDate() + 7
-    ));
+    // ensure deletion date is 7 days from the date the email was sent based on time of day.
+    const scheduledDeletionAt = new Date(now);
+    scheduledDeletionAt.setUTCDate(scheduledDeletionAt.getUTCDate() + 7);
 
     const { data: users, error } = await supabaseAdmin
         .from("users")
