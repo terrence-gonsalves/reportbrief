@@ -502,7 +502,7 @@ export async function queueAccountDeletionWarningEmails() {
 
         const inactiveDays = isPaid ? 60 : 30;
         const cutoff = isPaid ? paidCutoff : freeCutoff;
-        const deletionNoticeType = isPaid ? "paid_60_day" : "free_30_day";
+        const deletionPolicy = isPaid ? "paid" : "free";
 
         if (updatedAt >= cutoff) {
             continue;
@@ -534,7 +534,7 @@ export async function queueAccountDeletionWarningEmails() {
                 .update({
                     inactive_deletion_notice_sent_at: now.toISOString(),
                     scheduled_deletion_at: scheduledDeletionAt.toISOString(),
-                    deletion_notice_type: deletionNoticeType,
+                    deletion_policy: deletionPolicy,
                 })
                 .eq("id", userId);
 
@@ -564,6 +564,69 @@ export async function queueAccountDeletionWarningEmails() {
         processed,
         freeWarnings,
         paidWarnings,
+    };
+}
+
+/**
+ * Queue account deletion warning emails for users inactive 30+ days.
+ * Runs daily; sends once per user per month.
+ */
+export async function deleteMarkedInactiveAccounts() {
+    const now = new Date();
+
+    const { data: users, error } = await supabaseAdmin
+        .from("users")
+        .select("id, email, scheduled_deletion_at, deletion_notice_type")
+        .not("scheduled_deletion_at", "is", null)
+        .lte("scheduled_deletion_at", now.toISOString());
+
+    if (error || !users) {
+        await logAuditEvent("error", null, {
+            component: "emailTriggers",
+            action: "deleteMarkedInactiveAccounts",
+            error,
+        });
+
+        throw error || new Error("Failed to fetch marked inactive users");
+    }
+
+    let deletedCount = 0;
+
+    for (const user of users) {
+        try {
+            const { error: deleteUserError } = await supabaseAdmin
+                .from("users")
+                .delete()
+                .eq("id", user.id);
+
+            if (deleteUserError) {
+                throw deleteUserError;
+            }
+
+            const { error: authError } =
+                await supabaseAdmin.auth.admin.deleteUser(user.id);
+
+            if (authError) {
+                await logAuditEvent("error", user.id, {
+                    component: "emailTriggers",
+                    action: "deleteMarkedInactiveAccounts.authDelete",
+                    error: authError,
+                });
+            }
+
+            deletedCount++;
+        } catch (e) {
+            await logAuditEvent("error", user.id, {
+                component: "emailTriggers",
+                action: "deleteMarkedInactiveAccounts",
+                error: e,
+            });
+        }
+    }
+
+    return {
+        processed: users.length,
+        deletedCount,
     };
 }
 
