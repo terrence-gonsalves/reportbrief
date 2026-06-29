@@ -5,16 +5,18 @@ import {
     queueFirstReportReminders,
     queueInactiveUserEmails,
     queueAccountDeletionWarningEmails,
+    deleteMarkedInactiveAccounts,
 } from "@/lib/emailTriggers";
 import { logException } from "@/lib/errorLog";
 import { logAuditEvent } from "@/lib/auditLog";
 
-type CronJob = 
-    | "email_queue" 
-    | "monthly_reset" 
-    | "first_report_reminder" 
+type CronJob =
+    | "email_queue"
+    | "monthly_reset"
+    | "first_report_reminder"
     | "inactive_user"
-    | "delete_inactive_accounts";
+    | "queue_account_deletion_warnings"
+    | "delete_marked_inactive_accounts";
 
 export default async function handler(
     req: NextApiRequest,
@@ -37,7 +39,8 @@ export default async function handler(
         "monthly_reset",
         "first_report_reminder",
         "inactive_user",
-        "delete_inactive_accounts",
+        "queue_account_deletion_warnings",
+        "delete_marked_inactive_accounts",
     ];
 
     if (!job || typeof job !== "string" || !validJobs.includes(job as CronJob)) {
@@ -71,8 +74,12 @@ export default async function handler(
                 results = await queueInactiveUserEmails();
                 break;
 
-            case "delete_inactive_accounts":
+            case "queue_account_deletion_warnings":
                 results = await queueAccountDeletionWarningEmails();
+                break;
+            
+            case "delete_marked_inactive_accounts":
+                results = await deleteMarkedInactiveAccounts();
                 break;
 
             default:
