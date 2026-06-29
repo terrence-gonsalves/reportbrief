@@ -14,11 +14,13 @@ import * as React from "react";
 interface AccountDeletionWarningEmailProps {
     name: string;
     deletionDate: string;
+    inactiveDays: number;
 }
   
 export const AccountDeletionWarningEmail = ({
     name,
     deletionDate,
+    inactiveDays,
 }: AccountDeletionWarningEmailProps) => {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
@@ -36,7 +38,7 @@ export const AccountDeletionWarningEmail = ({
                         </Text>
     
                         <Text style={paragraph}>
-                            We noticed you haven&apos;t used ReportBrief in the past 30 days. Due to our data retention policy, your account and all associated data will be permanently deleted on <strong>{deletionDate}</strong>.
+                            We noticed you haven&apos;t used ReportBrief in the past {inactiveDays} days. Due to our data retention policy, your account and all associated data will be permanently deleted on <strong>{deletionDate}</strong>.
                         </Text>
             
                         <Text style={paragraph}>
