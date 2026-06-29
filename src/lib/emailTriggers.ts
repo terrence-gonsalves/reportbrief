@@ -437,7 +437,7 @@ export async function queueInactiveUserEmails() {
 }
 
 /**
- * Queue account deletion warning emails for users inactive 30+ days.
+ * Queue account deletion warning emails for users inactive 30/60+ days.
  * Runs daily; sends once per user per month.
  */
 export async function queueAccountDeletionWarningEmails() {
@@ -568,50 +568,30 @@ export async function queueAccountDeletionWarningEmails() {
 }
 
 /**
- * Queue account deletion warning emails for users inactive 30+ days.
- * Runs daily; sends once per user per month.
+ * Delete accounts that have been moarked to be deleted.
  */
 export async function deleteMarkedInactiveAccounts() {
     const now = new Date();
 
     const { data: users, error } = await supabaseAdmin
         .from("users")
-        .select("id, email, scheduled_deletion_at, deletion_notice_type")
+        .select("id, email, scheduled_deletion_at, deletion_policy")
         .not("scheduled_deletion_at", "is", null)
         .lte("scheduled_deletion_at", now.toISOString());
 
     if (error || !users) {
-        await logAuditEvent("error", null, {
-            component: "emailTriggers",
-            action: "deleteMarkedInactiveAccounts",
-            error,
-        });
-
-        throw error || new Error("Failed to fetch marked inactive users");
+        throw error || new Error("Failed to fetch users marked for deletion");
     }
 
     let deletedCount = 0;
 
     for (const user of users) {
         try {
-            const { error: deleteUserError } = await supabaseAdmin
-                .from("users")
-                .delete()
-                .eq("id", user.id);
-
-            if (deleteUserError) {
-                throw deleteUserError;
-            }
-
             const { error: authError } =
                 await supabaseAdmin.auth.admin.deleteUser(user.id);
 
             if (authError) {
-                await logAuditEvent("error", user.id, {
-                    component: "emailTriggers",
-                    action: "deleteMarkedInactiveAccounts.authDelete",
-                    error: authError,
-                });
+                throw authError;
             }
 
             deletedCount++;
