@@ -577,13 +577,23 @@ export async function deleteMarkedInactiveAccounts() {
         .not("scheduled_deletion_at", "is", null)
         .lte("scheduled_deletion_at", now.toISOString());
 
-    if (error || !users) {
-        throw error || new Error("Failed to fetch users marked for deletion");
+    if (error) {
+        await logAuditEvent("error", null, {
+            component: "emailTriggers",
+            action: "deleteMarkedInactiveAccounts",
+            error,
+        });
+
+        throw error;
     }
 
-    let deletedCount = 0;
+    let processed = 0;
+    let deleted = 0;
+    let failed = 0;
 
-    for (const user of users) {
+    for (const user of users ?? []) {
+        processed++;
+
         try {
             const { error: authError } =
                 await supabaseAdmin.auth.admin.deleteUser(user.id);
@@ -592,8 +602,19 @@ export async function deleteMarkedInactiveAccounts() {
                 throw authError;
             }
 
-            deletedCount++;
+            deleted++;
+
+            await logAuditEvent("accounts_deleted", user.id, {
+                deletionPolicy: user.deletion_policy,
+                scheduledDeletionAt: user.scheduled_deletion_at,
+            });
+
+            console.log(`Deleted inactive user ${user.id}`);
         } catch (e) {
+            failed++;
+
+            console.error(`Failed deleting user ${user.id}`, e);
+
             await logAuditEvent("error", user.id, {
                 component: "emailTriggers",
                 action: "deleteMarkedInactiveAccounts",
@@ -602,9 +623,16 @@ export async function deleteMarkedInactiveAccounts() {
         }
     }
 
+    console.log("=== DELETE MARKED INACTIVE ACCOUNTS COMPLETED ===");
+    console.log({
+        processed,
+        deleted,
+        failed,
+    });
+
     return {
-        processed: users.length,
-        deletedCount,
+        processed,
+        deleted,
+        failed,
     };
 }
-
